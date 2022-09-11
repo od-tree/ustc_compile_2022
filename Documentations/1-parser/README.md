@@ -157,7 +157,7 @@ int main(void) {
 * 编译
 
   ```sh
-  $ cd 2021fall-Compiler_CMinus
+  $ cd 2022fall-Compiler_CMinus
   $ mkdir build
   $ cd build
   $ cmake ..
@@ -171,7 +171,7 @@ int main(void) {
 * 运行
 
   ```sh
-  $ cd 2021fall-Compiler_CMinus
+  $ cd 2022fall-Compiler_CMinus
   # 词法测试
   $ ./build/lexer ./tests/parser/normal/local-decl.cminus
   Token	      Text	Line	Column (Start,End)
@@ -193,7 +193,7 @@ int main(void) {
   可以使用 `diff` 与标准输出进行比较。
 
   ```sh
-  $ cd 2021fall-Compiler_CMinus
+  $ cd 2022fall-Compiler_CMinus
   $ export PATH="$(realpath ./build):$PATH"
   $ cd tests/parser
   $ mkdir output.easy
@@ -234,15 +234,18 @@ int main(void) {
     * 不上传临时文件（凡是可以自动生成的都不要上传，如 `build` 目录、测试时自动生成的输出、`.DS_Store` 等）
     * git log 言之有物
 
+* 提交方式：
+  * 希冀平台在线提交:在希冀课程平台上发布实验处提交自己仓库的 gitlab 链接，可以得到实时反馈的测试结果。
+
 * 迟交规定
 
-  * Soft Deadline：2021-10-03 23:59:59 (UTC+8)
+  * Soft Deadline：2022-09-28 23:59:59 (UTC+8)
 
-  * Hard Deadline：2021-10-10 23:59:59 (UTC+8)
+  * Hard Deadline：2022-10-05 23:59:59 (UTC+8)
 
   * 补交请邮件提醒 TA：
 
-    * 邮箱：`ksqsf@mail.ustc.edu.cn` 抄送 `gpzlx1@mail.ustc.edu.cn` 抄送 `xzwj@mail.ustc.edu.cn`
+    * 邮箱：`zhenghy22@mail.ustc.edu.cn` 抄送 `chen16614@mail.ustc.edu.cn`
     * 邮件主题：lab1迟交-学号
     * 内容：迟交原因、最后版本commitID、迟交时间
 
