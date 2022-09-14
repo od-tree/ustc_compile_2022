@@ -246,9 +246,9 @@ int main(void) {
 
 * 迟交规定
 
-  * Soft Deadline：2022-09-28 23:59:59 (UTC+8)
+  * Soft Deadline：2022-10-03 23:59:59 (UTC+8)
 
-  * Hard Deadline：2022-10-05 23:59:59 (UTC+8)
+  * Hard Deadline：2022-10-10 23:59:59 (UTC+8)
 
   * 补交请邮件提醒 TA：
 

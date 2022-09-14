@@ -5,7 +5,7 @@
 ## 目前已布置的实验
 
 * [lab1](./Documentations/1-parser/)
-  + DDL：2022-09-28 23:59:59 (UTC+8)
+  + DDL：2022-10-03 23:59:59 (UTC+8)
 
 ## FAQ: How to merge upstream remote branches
 
