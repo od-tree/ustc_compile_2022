@@ -41,7 +41,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> ADD SUB MUL DIV LES LESE GRE GREE EQUAL NEQUAL ASSIN SEMICOLON COMMA 
 %token <node> LPAR RPAR LSBRA RSBRA LCBRA RCBRA LNOTE RNOTE LETTER DIG ID INTEGER FLO NOTE
 %type <node> type-specifier relop addop mulop
-%type <node> declaration-list declaration var-declaration function-declaration local-declarations
+%type <node> declaration-list declaration var-declaration fun-declaration local-declarations
 %type <node> compound-stmt statement-list statement expression-stmt iteration-stmt selection-stmt return-stmt
 %type <node> expression simple-expression var additive-expression term factor integer float call
 %type <node> params param-list param args arg-list
@@ -57,13 +57,13 @@ program: declaration-list {$$ =node("program",1,$1);gt->root=$$;};
 declaration-list: declaration-list declaration{$$=node("declaration-list",2,$1,$2);}
                 | declaration{$$=node("declaration-list",1,$1);};
 declaration: var-declaration{$$=node("declaration",1,$1);}
-            | function-declaration{$$=node("declaration",1,$1);};
+            | fun-declaration{$$=node("declaration",1,$1);};
 var-declaration: type-specifier ID SEMICOLON{$$=node("var-declaration",3,$1,$2,$3);}
                 | type-specifier ID LSBRA INTEGER RSBRA SEMICOLON{$$=node("var-declaration",6,$1,$2,$3,$4,$5,$6);};
 type-specifier: INT{$$=node("type-specifier",1,$1);}
                 | FLOAT{$$=node("type-specifier",1,$1);}
                 | VOID{$$=node("typr-specifier",1,$1);};
-function-declaration: type-specifier ID LPAR params RPAR compound-stmt{$$=node("function-declaration",6,$1,$2,$3,$4,$5,$6);};
+fun-declaration: type-specifier ID LPAR params RPAR compound-stmt{$$=node("fun-declaration",6,$1,$2,$3,$4,$5,$6);};
 params: param-list{$$=node("params",1,$1);}
         | VOID{$$=node("params",1,$1);};
 param-list: param-list COMMA param{$$=node("param-list",3,$1,$2,$3);}
@@ -127,7 +127,7 @@ program: declaration-list {$$ = node( "program", 1, $1); gt->root = $$;}
 
 %%
 
-/// The error reporting function.
+/// The error reporting fun.
 void yyerror(const char * s)
 {
     // TO STUDENTS: This is just an example.
@@ -138,7 +138,7 @@ void yyerror(const char * s)
 /// Parse input from file `input_path`, and prints the parsing results
 /// to stdout.  If input_path is NULL, read from stdin.
 ///
-/// This function initializes essential states before running yyparse().
+/// This fun initializes essential states before running yyparse().
 syntax_tree *parse(const char *input_path)
 {
     if (input_path != NULL) {
@@ -157,7 +157,7 @@ syntax_tree *parse(const char *input_path)
     return gt;
 }
 
-/// A helper function to quickly construct a tree node.
+/// A helper fun to quickly construct a tree node.
 ///
 /// e.g. $$ = node("program", 1, $1);
 syntax_tree_node *node(const char *name, int children_num, ...)
