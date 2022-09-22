@@ -1,6 +1,5 @@
 project(CMINUSF)
 cmake_minimum_required( VERSION 3.4 )
-
 set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
 
 set(CMAKE_BUILD_TYPE "Debug")
