@@ -24,7 +24,7 @@ void pass_node(char *text){
  /* to do for students */
  /* two cases for you, pass_node will send flex's token to bison */
 \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\**\*\/	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return NOTE;}
-[ ] {pos_start = pos_end; pos_end += 1;}
+[ |\n] {pos_start = pos_end; pos_end += 1;}
 [\t] {pos_start = pos_end; pos_end += 4;}
 \+ 	{pos_start = pos_end; pos_end += 1; pass_node(yytext); return ADD;}
 \- 	{pos_start = pos_end; pos_end += 1; pass_node(yytext); return SUB;}
