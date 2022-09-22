@@ -40,11 +40,11 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> ELSE IF INT RETURN VOID WHILE FLOAT
 %token <node> ADD SUB MUL DIV LES LESE GRE GREE EQUAL NEQUAL ASSIN SEMICOLON COMMA 
 %token <node> LPAR RPAR LSBRA RSBRA LCBRA RCBRA LNOTE RNOTE LETTER DIG ID INTEGER FLO NOTE
-%token <node> type-specifier relop addop mulop
-%token <node> declaration-list declaration var-declaration fun-declaration local-declarations
-%token <node> compound-stmt statement-list statement expression-stmt iteration-stmt selection-stmt return-stmt
-%token <node> expression simple-expression var additive-expression term factor integer float call
-%token <node> params param-list param args arg-list
+%type <node> type-specifier relop addop mulop
+%type <node> declaration-list declaration var-declaration fun-declaration local-declarations
+%type <node> compound-stmt statement-list statement expression-stmt iteration-stmt selection-stmt return-stmt
+%type <node> expression simple-expression var additive-expression term factor integer float call
+%type <node> params param-list param args arg-list
 
 %token <node> ERROR
 %type <node> program
