@@ -41,7 +41,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> ADD SUB MUL DIV LES LESE GRE GREE EQUAL NEQUAL ASSIN SEMICOLON COMMA 
 %token <node> LPAR RPAR LSBRA RSBRA LCBRA RCBRA LNOTE RNOTE LETTER DIG ID INTEGER FLO NOTE
 %type <node> type-specifier relop addop mulop
-%type <node> declaration-list declaration var-declaration fun-declaration local-declarations
+%type <node> declaration-list declaration var-declaration function-declaration local-declarations
 %type <node> compound-stmt statement-list statement expression-stmt iteration-stmt selection-stmt return-stmt
 %type <node> expression simple-expression var additive-expression term factor integer float call
 %type <node> params param-list param args arg-list
@@ -57,7 +57,7 @@ program: declaration-list {$$ =node("program",1,$1);gt->root=$$;};
 declaration-list: declaration-list declaration{$$=node("declaration-list",2,$1,$2);}
                 | declaration{$$=node("declaration-list",1,$1);};
 declaration: var-declaration{$$=node("declaration",1,$1);}
-            | fun-declaration{$$=node("declaration",1,$1);};
+            | function-declaration{$$=node("declaration",1,$1);};
 var-declaration: type-specifier ID SEMICOLON{$$=node("var-declaration",3,$1,$2,$3);}
                 | type-specifier ID LSBRA INTEGER RSBRA SEMICOLON{$$=node("var-declaration",6,$1,$2,$3,$4,$5,$6);};
 type-specifier: INT{$$=node("type-specifier",1,$1);}
@@ -70,8 +70,8 @@ param-list: param-list COMMA param{$$=node("param-list",3,$1,$2,$3);}
         |   param{$$=node("param-list",1,$1);};
 param: type-specifier ID{$$=node("param",2,$1,$2);}
      | type-specifier ID LSBRA RSBRA{$$=node("param",4,$1,$2,$3,$4);};
-compound-stmt: LCBRA local-declaration statement-list RCBRA{$$=node("compound-stmt",4,$1,$2,$3,$4);};
-local-declarations: local-declarations var-declaration{$$=node("local-declaration",2,$1,$2);}
+compound-stmt: LCBRA local-declarations statement-list RCBRA{$$=node("compound-stmt",4,$1,$2,$3,$4);};
+local-declarations: local-declarations var-declaration{$$=node("local-declarations",2,$1,$2);}
                 | { $$ = node("local-declarations", 0); };
 statement-list: statement-list statement{$$=node("statement-list",2,$1,$2);}
                 |  { $$ = node("statement-list", 0); };
@@ -102,7 +102,7 @@ relop: LESE{$$=node("relop",1,$1);}
 additive-expression: additive-expression addop term{$$=node("additive-expression",3,$1,$2,$3);}
                     | term{$$=node("additive-expression",1,$1);};
 addop: ADD{$$=node("addop",1,$1);}
-        SUB{$$=node("addop",1$1);};
+      |  SUB{$$=node("addop",1$1);};
 term: term mulop factor{$$=node("term",3,$1,$2,$3);}
     | factor{$$=node("term",1,$1);};
 mulop: MUL{$$=node("mulop",1,$1);}
@@ -124,7 +124,6 @@ program: declaration-list {$$ = node( "program", 1, $1); gt->root = $$;}
        ;
 */
 
-program : ;
 
 %%
 
