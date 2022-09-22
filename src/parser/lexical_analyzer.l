@@ -57,7 +57,7 @@ while  	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); retu
 float  	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return FLOAT;}
 
 [a-zA-Z]+  	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return ID;}
-[0-9]+.|[0-9]*.[0-9]+ 	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return FLO;}
+[0-9]+\.|[0-9]*\.[0-9]+ 	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return FLO;}
 [0-9]+	{pos_start = pos_end; pos_end += strlen(yytext); pass_node(yytext); return INTEGER;}
 
 
