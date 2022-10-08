@@ -1,4 +1,5 @@
 add_subdirectory(parser)
+add_subdirectory(2-ir-gen-warmup)
 add_executable(test_ast test_ast.cpp)
 add_executable(test_logging test_logging.cpp)
 target_link_libraries(test_logging common)
