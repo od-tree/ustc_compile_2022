@@ -123,7 +123,7 @@ $ ./result
         │   ├── fun.c
         │   ├── if.c
         │   └── while.c
-        ├── CMakeLists.txt              <- 你在2.3节需要去掉注释（我们不收，你要改）
+        ├── CMakeLists.txt              <- 你在2.3节需要去掉注释（你要交）
         ├── stu_cpp                     <- lab2 所需提交的 cpp 目录（你要交）
         │   ├── assign_generator.cpp
         │   ├── fun_generator.cpp
