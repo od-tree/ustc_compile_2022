@@ -22,22 +22,22 @@
 本次实验的目的是让大家熟悉 Lab3 所需要的相关知识: LLVM IR、 LightIR（LLVM IR 的轻量级 C++ 接口）和 Visitor Pattern（访问者模式）。  
 在开始实验之前，请根据之前的[编译实验环境搭建](http://202.38.79.174/compiler_staff/2022fall-environment/-/blob/master/README.md)确保LLVM的版本为10.0.1，且PATH环境变量配置正确。可以通过`lli --version`命令是否可以输出10.0.1的版本信息来验证（其它版本不一定兼容）。  
 本次实验设置的目的是为 Lab3 进行知识的准备与热身， coding 的工程量不大，但是需要一定的阅读、学习、理解。因此本次的实验报告相比之下内容要求会稍微多一些，以避免大家在 Lab3 时手足无措。
-这里助教提供了简单的[C++简介](Documentations/common/simple_cpp.md)，对C++基本特性不熟悉的同学可以先阅读该文档。
+这里助教提供了简单的[C++简介](../../Documentations/common/simple_cpp.md)，对C++基本特性不熟悉的同学可以先阅读该文档。
 
 ### 主要工作
 
 1. 第一部分: 了解 LLVM IR。通过 clang 生成的 .ll ，了解 LLVM IR 与 c 代码的对应关系，**完成1.3**。
 2. 第二部分: 了解 LightIR。通过助教提供的 c++ 例子，了解 LightIR 的 c++ 接口及实现，**完成2.3**。
 3. 第三部分: 理解 Visitor Pattern 。**完成3.1**
-4. 实验报告：在 [report.md](./Reports/2-ir-gen-warmup/report.md) 中**回答3个问题**。
+4. 实验报告：在 [report.md](../../Reports/2-ir-gen-warmup/report.md) 中**回答3个问题**。
 
 ## 1. LLVM IR 部分
 ### 1.1 LLVM IR 介绍
 根据[维基百科](https://zh.wikipedia.org/zh-cn/LLVM)的介绍，LLVM是一个自由软件项目，它是一种编译器基础设施，以C++写成，包含一系列模块化的编译器组件和工具链，用来开发编译器前端和后端。IR的全称是Intermediate Representation，即中间表示。LLVM IR是一种类似于汇编的底层语言。
 
-LLVM IR的具体指令可以参考 [Reference Manual](http://llvm.org/docs/LangRef.html)。由于其手册过于复杂，助教筛选了后续实验中将要用到的子集，总结为了 [Light IR 手册](../common/LightIR.md#ir-%E6%A0%BC%E5%BC%8F)。如果有感兴趣的同学可以阅读原手册作为拓展。
+LLVM IR的具体指令可以参考 [Reference Manual](https://llvm.org/docs/LangRef.html)。由于其手册过于复杂，助教筛选了后续实验中将要用到的子集，总结为了 [Light IR 手册](../common/LightIR.md#ir-%E6%A0%BC%E5%BC%8F)。如果有感兴趣的同学可以阅读原手册作为拓展。
 
-作为一开始的参考，你可以先阅读其中 `IR格式` 和 `IR指令` 两节，后续有需要再反复参考。实验的最后，你需要在 [report.md](./Reports/2-ir-gen-warmup/report.md) 中**回答问题1**。
+作为一开始的参考，你可以先阅读其中 `IR格式` 和 `IR指令` 两节，后续有需要再反复参考。实验的最后，你需要在 [report.md](../../Reports/2-ir-gen-warmup/report.md) 中**回答问题1**。
 
 ### 1.2 gcd 例子: 利用 clang 生成的 .ll
 阅读 [tests/2-ir-gen-warmup/ta_gcd/gcd_array.c](../../tests/2-ir-gen-warmup/ta_gcd/gcd_array.c)。
@@ -67,14 +67,14 @@ lab3 部分会要求大家通过 `LightIR` 根据 `AST` 构建生成 LLVM IR。�
 该程序的编译与运行请参考 4.2 节。
 
 ### 2.3 你的提交2: 利用 LightIR + cpp 编写生成 .ll 的程序
-你需要在 `tests/2-ir-gen-warmup/stu_cpp/` 目录中，编写 [assign_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/assign_generator.cpp)、 [fun_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/fun_generator.cpp)、 [if_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/if_generator.cpp) 和 [while_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/while_generator.cpp)，以生成与 1.3 节的四个 c 程序相同逻辑功能的 `.ll` 文件。你需要完成 [report.md](./Reports/2-ir-gen-warmup/report.md) 中的**问题2**。
+你需要在 `tests/2-ir-gen-warmup/stu_cpp/` 目录中，编写 [assign_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/assign_generator.cpp)、 [fun_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/fun_generator.cpp)、 [if_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/if_generator.cpp) 和 [while_generator.cpp](../../tests/2-ir-gen-warmup/stu_cpp/while_generator.cpp)，以生成与 1.3 节的四个 c 程序相同逻辑功能的 `.ll` 文件。你需要完成 [report.md](../../Reports/2-ir-gen-warmup/report.md) 中的**问题2**。
 
 ## 3. Lab3 的准备
 ### 3.1 了解 Visitor Pattern
 Visitor Pattern（访问者模式）是一种在 LLVM 项目源码中被广泛使用的设计模式。在遍历某个数据结构（比如树）时，如果我们需要对每个节点做一些额外的特定操作， Visitor Pattern 就是个不错的思路。
 Visitor Pattern 是为了解决**稳定的数据结构**和**易变的操作耦合问题**而产生的一种设计模式。解决方法就是在被访问的类里面加一个对外提供接待访问者的接口，其关键在于在数据基础类里面有一个方法接受访问者，将自身引用传入访问者。这里举一个应用实例来帮助理解访问者模式: 您在朋友家做客，您是访问者；朋友接受您的访问，您通过朋友的描述，然后对朋友的描述做出一个判断，这就是访问者模式。
 有关 Visitor Pattern 的含义、模式和特点，有梯子的同学可参考 [维基百科](https://en.wikipedia.org/wiki/Visitor_pattern#C++_example)。其中较为重要的一点原则在于， C++ 中对函数重载特性的支持。
-在 `tests/2-ir-gen-warmup/calculator` 中，助教编写了一个利用访问者模式，产生计算算数表达式的中间代码的程序。该程序首先对算数表达式进行语法分析生成语法树，再使用访问者模式来遍历语法树，产生中间代码。在 [calc_ast.hpp](../../tests/2-ir-gen-warmup/calculator/calc_ast.hpp) 中，我们定义了语法树的不同节点类型。在 [calc_builder.cpp](../../tests/2-ir-gen-warmup/calculator/calc_builder.cpp) 中，我们使用 LightIR 编写了不同的 `visit` 函数。根据节点类型的不同，编译器会在多种 `visit` 函数中，选择对应的实现进行调用。请认真阅读这两个文件和其它相关代码，理解语法树是如何通过访问者模式被遍历的，并在 [report.md](./Reports/2-ir-gen-warmup/report.md)中**回答问题3**。
+在 `tests/2-ir-gen-warmup/calculator` 中，助教编写了一个利用访问者模式，产生计算算数表达式的中间代码的程序。该程序首先对算数表达式进行语法分析生成语法树，再使用访问者模式来遍历语法树，产生中间代码。在 [calc_ast.hpp](../../tests/2-ir-gen-warmup/calculator/calc_ast.hpp) 中，我们定义了语法树的不同节点类型。在 [calc_builder.cpp](../../tests/2-ir-gen-warmup/calculator/calc_builder.cpp) 中，我们使用 LightIR 编写了不同的 `visit` 函数。根据节点类型的不同，编译器会在多种 `visit` 函数中，选择对应的实现进行调用。请认真阅读这两个文件和其它相关代码，理解语法树是如何通过访问者模式被遍历的，并在 [report.md](../../Reports/2-ir-gen-warmup/report.md)中**回答问题3**。
 
 
 该程序使用方法如下:
@@ -164,7 +164,7 @@ $ ./result
     * 需要完成 `./tests/2-ir-gen-warmup/stu_cpp` 目录下的4个文件
     * 需要在 `./Reports/2-ir-gen-warmup/` 目录下撰写实验报告
       * 实验报告内容包括:
-        * 实验要求、3个问题、实验难点、实验反馈(具体参考 [report.md](./Reports/2-ir-gen-warmup/report.md))
+        * 实验要求、3个问题、实验难点、实验反馈(具体参考 [report.md](../../Reports/2-ir-gen-warmup/report.md))
         * 本次实验报告**参与**评分标准.
   * git 提交规范:
     * 不破坏目录结构( `report.md` 如果需要放图片，请放在 `./Reports/2-ir-gen-warmup/figs/` 下)
