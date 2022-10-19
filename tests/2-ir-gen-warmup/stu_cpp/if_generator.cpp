@@ -19,12 +19,40 @@
 #define CONST_FP(num) ConstantFP::get(num, module) // 得到常数值的表示,方便后面多次用到
 
 int main() {
-  auto module = new Module("Cminus code");  // module name是什么无关紧要
-  auto builder = new IRBuilder(nullptr, module);
-  Type *Int32Type = Type::get_int32_type(module);
+    auto module = new Module("Cminus code");  // module name是什么无关紧要
+    auto builder = new IRBuilder(nullptr, module);
+    Type *Int32Type = Type::get_int32_type(module);
+    Type *FloatType = Type::get_float_type(module);
+
+    auto mainFun = Function::create(FunctionType::get(Int32Type, {}),
+                                    "main", module);
+    auto bb = BasicBlock::create(module, "entry", mainFun);
+    builder->set_insert_point(bb);
+
+    auto retAlloca = builder->create_alloca(Int32Type);
+    builder->create_store(CONST_INT(0), retAlloca);
+
+    auto a=builder->create_alloca(FloatType);
+    builder->create_store(CONST_FP(5.55),a);
+
+    auto retTrue =BasicBlock::create(module,"True",mainFun);
+
+    auto retFalse=BasicBlock::create(module,"False",mainFun);
 
 
-  std::cout << module->print();
-  delete module;
-  return 0;
+    auto aValue=builder->create_load(a);
+    auto res=builder->create_fcmp_gt(aValue, CONST_FP(1));
+
+    auto br=builder->create_cond_br(res,retTrue,retFalse);
+
+    builder->set_insert_point(retTrue);
+    builder->create_store(CONST_INT(233),retAlloca);
+    builder->create_ret(retAlloca);
+    builder->set_insert_point(retFalse);
+    builder->create_store(CONST_INT(0),retAlloca);
+    builder->create_ret(retAlloca);
+
+    std::cout << module->print();
+    delete module;
+    return 0;
 }

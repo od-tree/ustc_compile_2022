@@ -23,24 +23,31 @@ int main() {
     auto builder = new IRBuilder(nullptr, module);
     Type *Int32Type = Type::get_int32_type(module);
 
-    auto retAlloca = builder->create_alloca(Int32Type);
-    
+
     auto mainFun = Function::create(FunctionType::get(Int32Type, {}),
                                   "main", module);
     auto bb = BasicBlock::create(module, "entry", mainFun);
     builder->set_insert_point(bb);
-    retAlloca = builder->create_alloca(Int32Type);
+
+    auto retAlloca = builder->create_alloca(Int32Type);
     builder->create_store(CONST_INT(0), retAlloca);
+
     auto arrayType = ArrayType::get(Int32Type,10);
     auto a=builder->create_alloca(arrayType);
+
     auto a0GEP = builder->create_gep(a, {CONST_INT(0), CONST_INT(0)});
     builder->create_store(CONST_INT(10),a0GEP);
     auto tmp=builder->create_load(a0GEP);
     auto ans=builder->create_imul(tmp, CONST_INT(2));
     auto a1GEP=builder->create_gep(a,{CONST_INT(0), CONST_INT(1)});
     builder->create_store(ans,a1GEP);
-    auto retdata=builder->create_load(a1GEP);
-    builder->create_ret(retdata);
+
+//    builder->create_store(ans,retAlloca);
+
+//    auto retdata=builder->create_load(retAlloca);
+    builder->create_ret(ans);
+
+
     std::cout << module->print();
     delete module;
     return 0;
