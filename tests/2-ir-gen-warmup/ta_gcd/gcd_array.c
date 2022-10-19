@@ -1,5 +1,5 @@
-int x[1];
-int y[1];
+
+int y[2];
 
 int gcd (int u, int v) { 
     if (v == 0) return u;
@@ -21,7 +21,8 @@ int funArray (int u[], int v[]) {
 }
 
 int main(void) {
+    int x[2];
     x[0] = 90;
-    y[0] = 18;
+    y[1] = x[0];
     return funArray(x, y);
 }
