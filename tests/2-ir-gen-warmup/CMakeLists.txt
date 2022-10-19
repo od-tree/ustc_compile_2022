@@ -8,14 +8,14 @@ target_link_libraries(
     IR_lib
 )
 
-# add_executable(
-#     stu_assign_generator
-#     stu_cpp/assign_generator.cpp
-# )
-# target_link_libraries(
-#     stu_assign_generator    
-#     IR_lib
-# )
+ add_executable(
+     stu_assign_generator
+     stu_cpp/assign_generator.cpp
+ )
+ target_link_libraries(
+     stu_assign_generator
+     IR_lib
+ )
 # add_executable(
 #     stu_fun_generator
 #     stu_cpp/fun_generator.cpp
