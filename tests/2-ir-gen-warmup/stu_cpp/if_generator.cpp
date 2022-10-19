@@ -47,10 +47,12 @@ int main() {
 
     builder->set_insert_point(retTrue);
     builder->create_store(CONST_INT(233),retAlloca);
-    builder->create_ret(retAlloca);
+    auto ans1=builder->create_load(retAlloca);
+    builder->create_ret(ans1);
     builder->set_insert_point(retFalse);
     builder->create_store(CONST_INT(0),retAlloca);
-    builder->create_ret(retAlloca);
+    auto ans2=builder->create_load(retAlloca);
+    builder->create_ret(ans2);
 
     std::cout << module->print();
     delete module;

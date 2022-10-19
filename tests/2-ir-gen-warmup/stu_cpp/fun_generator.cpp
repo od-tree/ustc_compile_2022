@@ -36,7 +36,8 @@ int main() {
     builder->create_store(args[0], aAlloca);
     auto retValue=builder->create_imul(args[0], CONST_INT(2));
     builder->create_store(retValue,retAlloca);
-    builder->create_ret(retAlloca);
+    auto ans=builder->create_load(retAlloca);
+    builder->create_ret(ans);
 
     auto mainFun = Function::create(FunctionType::get(Int32Type, {}),
                                     "main", module);
