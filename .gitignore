@@ -3,3 +3,5 @@ src/.DS_Store
 src/parser/.DS_Store
 **/.DS_Store
 cmake-build-debug
+**/.vscode
+**/.idea
