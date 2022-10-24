@@ -130,8 +130,7 @@ cminusfc test.cminus
 ├── Reports
 │   ├── ...
 │   └── 3-ir-gen
-│       ├── report.md                   <- lab3 所需提交的实验报告，请详细说明你们的设计（需要上交）
-│       └── contribution.md             <- lab3 所需提交的队员贡献信息（需要上交）
+│       └── report.md                   <- lab3 所需提交的实验报告，请详细说明你们的设计（需要上交）
 ├── src
 │   ├── ...
 │   └── cminusfc
