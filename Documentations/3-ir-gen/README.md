@@ -167,9 +167,9 @@ cminusfc test.cminus
 
 * 提交方式：
 
-  * 代码提交：本次实验需要在希冀课程平台上发布的作业[Lab3-代码提交](TODO)提交自己仓库的 gitlab 链接（注：由于平台限制，请提交http协议格式的仓库链接。例：学号为 PB011001 的同学，Lab3 的实验仓库地址为`http://202.38.79.174/PB011001/2022fall-compiler_cminus.git`），我们会收集最后一次提交的评测分数，作为最终代码得分。
+  * 代码提交：本次实验需要在希冀课程平台上发布的作业[Lab3-代码提交](http://cscourse.ustc.edu.cn/assignment/index.jsp?courseID=17&assignID=54)提交自己仓库的 gitlab 链接（注：由于平台限制，请提交http协议格式的仓库链接。例：学号为 PB011001 的同学，Lab3 的实验仓库地址为`http://202.38.79.174/PB011001/2022fall-compiler_cminus.git`），我们会收集最后一次提交的评测分数，作为最终代码得分。
 
-  * 报告提交：`将 Reports/3-ir-gen/report.md` 导出成 pdf 文件单独提交到[Lab3-报告提交](TODO)。
+  * 报告提交：`将 Reports/3-ir-gen/report.md` 导出成 pdf 文件单独提交到[Lab3-报告提交](http://cscourse.ustc.edu.cn/assignment/index.jsp?courseID=17&assignID=54)。
 
   * 提交异常：如果遇到在平台上提交异常的问题，请通过邮件联系助教，助教将收取截止日期之前，学生在 gitlab 仓库最近一次 commit 内容进行评测。
 
@@ -180,8 +180,8 @@ cminusfc test.cminus
   * 禁止执行恶意代码，违者本次实验0分处理
   
 * 迟交规定
-  * `Soft Deadline` : (TBD) 2022/11/10 23:59:59 (北京标准时间，UTC+8)
-  * `Hard Deadline` : (TBD) 2022/11/17 23:59:59 (北京标准时间，UTC+8)
+  * `Soft Deadline` : 2022/11/07 23:59:59 (北京标准时间，UTC+8)
+  * `Hard Deadline` : 2022/11/14 23:59:59 (北京标准时间，UTC+8)
   * 迟交需要邮件通知TA: 
     * 邮箱: `lq_2019@mail.ustc.edu.cn` 抄送 `edwardzcn@mail.ustc.edu.cn`
     * 邮件主题: lab3迟交-学号-姓名
