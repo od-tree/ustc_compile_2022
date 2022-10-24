@@ -10,7 +10,7 @@
 * [lab2](./Documentations/2-ir-gen-warmup/)
   + DDL：2022-10-23 23:59:59 (UTC+8)
 
-* [lab2](./Documentations/3-ir-gen/)
+* [lab3](./Documentations/3-ir-gen/)
   + DDL：2022-11-07 23:59:59 (UTC+8)
 
 ## FAQ: How to merge upstream remote branches
