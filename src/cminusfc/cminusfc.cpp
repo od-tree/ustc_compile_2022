@@ -96,16 +96,17 @@ int main(int argc, char **argv) {
     output_stream.close();
     if (!emit) {
         std::string lib_path = argv[0];
-        lib_path.erase(lib_path.rfind('/')) += "/libcminus_io.a";
-        auto command_string = "clang -O0 -w "s + target_path + ".ll -o " + target_path + " " + lib_path;
-        int re_code0 = std::system(command_string.c_str());
-        command_string = "rm "s + target_path + ".ll";
-        int re_code1 = std::system(command_string.c_str());
+        auto idx = lib_path.rfind('/');
+        if (idx != std::string::npos)
+            lib_path.erase(lib_path.rfind('/'));
+        auto cmd_str = "clang -O0 -w "s + target_path + ".ll -o " + target_path + " -L" + lib_path + " -lcminus_io";
+        int re_code0 = std::system(cmd_str.c_str());
+        cmd_str = "rm "s + target_path + ".ll";
+        int re_code1 = std::system(cmd_str.c_str());
         if (re_code0 == 0 && re_code1 == 0)
             return 0;
         else
             return 1;
     }
-
     return 0;
 }
