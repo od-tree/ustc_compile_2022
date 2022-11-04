@@ -33,6 +33,7 @@ Lab3 实验建立在 Lab2 的基础上，带领大家进一步理解源代码到
 2. 助教们在 `cminusf_builder.cpp` 提供的部分函数是不完整的，无法通过所有测试用例。需要你补充代码的地方已经用 `TODO` 标出。我们提供的`cminusf_builder.cpp` 只可以满足测试用例 `lv0_1` 中的 `return.cminus`。虽然`eval.py`会显示其他一些测试用例也是`success`，但它对应的`.ll`文件是不正确的，不要因其显示 `success` 忽略了对应的代码补充，那会影响你后面较复杂样例的正确性。
 3. 简要阅读 `cminusf_builder.hpp` 和其他头文件中定义的函数和变量，理解项目框架也会为你的实验提供很大的帮助。
 4. 请独立完成实验，不要抄袭他人代码。
+5. 为方便同学们更好完成实验，补充提示文档，参见[Lab3 More Tips](./more-tips.md)。
 
 ## 1. 实验框架
 
@@ -64,6 +65,7 @@ bool in_global();
 
 ```sh
 mkdir build && cd build
+cmake ..
 make clean
 make -j
 # 安装库 libcminus_io.a 至系统目录
@@ -179,8 +181,8 @@ cminusfc test.cminus
   * 禁止执行恶意代码，违者本次实验0分处理
   
 * 迟交规定
-  * `Soft Deadline` : 2022/11/07 23:59:59 (北京标准时间，UTC+8)
-  * `Hard Deadline` : 2022/11/14 23:59:59 (北京标准时间，UTC+8)
+  * `Soft Deadline` : 2022/11/13 23:59:59 (北京标准时间，UTC+8)
+  * `Hard Deadline` : 2022/11/20 23:59:59 (北京标准时间，UTC+8)
   * 迟交需要邮件通知TA: 
     * 邮箱: `lq_2019@mail.ustc.edu.cn` 抄送 `edwardzcn@mail.ustc.edu.cn`
     * 邮件主题: lab3迟交-学号-姓名
