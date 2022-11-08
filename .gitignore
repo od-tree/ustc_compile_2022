@@ -5,3 +5,5 @@ src/parser/.DS_Store
 cmake-build-debug
 **/.vscode
 **/.idea
+.clang-format
+.DS_Store
