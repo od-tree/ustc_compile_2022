@@ -446,7 +446,7 @@ void CminusfBuilder::visit(ASTSimpleExpression &node) {
             }
             else
             {
-                r_val=builder->create_fptosi(r_val,FLOAT_T);
+                r_val=builder->create_sitofp(r_val,FLOAT_T);
             }
         }
         else
@@ -543,7 +543,7 @@ void CminusfBuilder::visit(ASTAdditiveExpression &node) {
             if (l_val->get_type()->is_integer_type()) {
                 l_val = builder->create_sitofp(l_val, FLOAT_T);
             } else {
-                r_val = builder->create_fptosi(r_val, FLOAT_T);
+                r_val = builder->create_sitofp(r_val, FLOAT_T);
             }
         } else {
             if (l_val->get_type()->is_integer_type()) {
@@ -594,7 +594,7 @@ void CminusfBuilder::visit(ASTTerm &node) {
             if (l_val->get_type()->is_integer_type()) {
                 l_val = builder->create_sitofp(l_val, FLOAT_T);
             } else {
-                r_val = builder->create_fptosi(r_val, FLOAT_T);
+                r_val = builder->create_sitofp(r_val, FLOAT_T);
             }
         } else {
             if (l_val->get_type()->is_integer_type()) {
