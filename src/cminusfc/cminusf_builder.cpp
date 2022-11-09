@@ -267,6 +267,9 @@ void CminusfBuilder::visit(ASTSelectionStmt &node) {
         }
     }
     builder->set_insert_point(contBB);
+    auto tmpBB=BasicBlock::create(module.get(),"",cur_fun);
+    builder->create_br(tmpBB);
+    builder->set_insert_point(tmpBB);
 }
 
 void CminusfBuilder::visit(ASTIterationStmt &node) {
