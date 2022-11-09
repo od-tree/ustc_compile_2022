@@ -338,6 +338,8 @@ void CminusfBuilder::visit(ASTVar &node) {
     //!TODO: This function is empty now.
     // Add some code here.
     auto tmp_var=scope.find(node.id);
+    auto require_lvalue=need_lvalue;
+    need_lvalue= false;
     assert(tmp_var!= nullptr);
     if(node.expression== nullptr)
     {
@@ -394,7 +396,7 @@ void CminusfBuilder::visit(ASTVar &node) {
         }
         val=tmp_ptr;
     }
-    if(!need_lvalue)
+    if(!require_lvalue)
     {
         if(node.expression==nullptr)
         {
@@ -412,7 +414,7 @@ void CminusfBuilder::visit(ASTVar &node) {
             val=builder->create_load(val);
         }
     }
-    need_lvalue= false;
+
 }
 
 void CminusfBuilder::visit(ASTAssignExpression &node) {
