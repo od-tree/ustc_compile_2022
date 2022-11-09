@@ -396,7 +396,14 @@ void CminusfBuilder::visit(ASTVar &node) {
     }
     if(!need_lvalue)
     {
-        val=builder->create_load(val);
+        if(tmp_var->get_type()->get_pointer_element_type()->is_integer_type() || tmp_var->get_type()->get_pointer_element_type()->is_float_type()||tmp_var->get_type()->get_pointer_element_type()->is_pointer_type())
+        {
+            val=builder->create_load(val);
+        }
+        else
+        {
+            val=builder->create_gep(val,{CONST_INT(0), CONST_INT(0)});
+        }
     }
     need_lvalue= false;
 }
