@@ -657,9 +657,12 @@ void CminusfBuilder::visit(ASTCall &node) {
             {
                 val=builder->create_sitofp(val,FLOAT_T);
             }
-            if(val->get_type()->is_float_type())
+            else
             {
-                val=builder->create_fptosi(val,INT32_T);
+                if(val->get_type()->is_float_type())
+                {
+                    val=builder->create_fptosi(val,INT32_T);
+                }
             }
         }
         args.push_back(val);
