@@ -273,8 +273,6 @@ void CminusfBuilder::visit(ASTIterationStmt &node) {
     //!TODO: This function is empty now.
     // Add some code here.
     auto judgeBB=BasicBlock::create(module.get(),"",cur_fun);
-    auto whileBB=BasicBlock::create(module.get(),"",cur_fun);
-    auto contBB=BasicBlock::create(module.get(), "", cur_fun);
     if(builder->get_insert_block()->get_terminator()==nullptr)
     {
         builder->create_br(judgeBB);
@@ -282,6 +280,8 @@ void CminusfBuilder::visit(ASTIterationStmt &node) {
     builder->set_insert_point(judgeBB);
     node.expression->accept(*this);
     Value* cond;
+    auto whileBB=BasicBlock::create(module.get(),"",cur_fun);
+    auto contBB=BasicBlock::create(module.get(), "", cur_fun);
     if(val->get_type()==INT32_T)
     {
         cond=builder->create_icmp_ne(val, CONST_INT(0));
