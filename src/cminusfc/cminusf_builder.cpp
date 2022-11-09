@@ -293,11 +293,14 @@ void CminusfBuilder::visit(ASTIterationStmt &node) {
     builder->create_cond_br(cond, whileBB, contBB);
     builder->set_insert_point(whileBB);
     node.statement->accept(*this);
-    if(whileBB->get_terminator()== nullptr)
-    {
+//    if(whileBB->get_terminator()== nullptr)
+//    {
         builder->create_br(judgeBB);
-    }
+//    }
     builder->set_insert_point(contBB);
+    auto tmpBB=BasicBlock::create(module.get(),"",cur_fun);
+    builder->create_br(tmpBB);
+    builder->set_insert_point(tmpBB);
 }
 
 void CminusfBuilder::visit(ASTReturnStmt &node) {
