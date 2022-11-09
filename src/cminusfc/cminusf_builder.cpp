@@ -169,7 +169,7 @@ void CminusfBuilder::visit(ASTFunDeclaration &node) {
         //!TODO: You need to deal with params
         // and store them in the scope.
         auto param_alloc=builder->create_alloca(param_types[i]);
-//        builder->create_store(args[i],param_alloc);
+        builder->create_store(args[i],param_alloc);
         scope.push(node.params[i]->id,param_alloc);
     }
     node.compound_stmt->accept(*this);
