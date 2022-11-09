@@ -385,7 +385,7 @@ void CminusfBuilder::visit(ASTVar &node) {
             if(tmp_var->get_type()->get_pointer_element_type()->is_pointer_type())
             {
                 auto array_load=builder->create_load(tmp_var);
-                tmp_ptr =builder->create_gep(array_load,{CONST_INT(0),tmpVar});
+                tmp_ptr =builder->create_gep(array_load,{tmpVar});
             }
             else
             {
