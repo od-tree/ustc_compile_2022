@@ -253,18 +253,18 @@ void CminusfBuilder::visit(ASTSelectionStmt &node) {
     }
     builder->set_insert_point(trueBB);
     node.if_statement->accept(*this);
-    if(trueBB->get_terminator()== nullptr)
-    {
+//    if(trueBB->get_terminator()== nullptr)
+//    {
         builder->create_br(contBB);
-    }
+//    }
     if(node.else_statement!= nullptr)
     {
         builder->set_insert_point(falseBB);
         node.else_statement->accept(*this);
-        if(falseBB->get_terminator()== nullptr)
-        {
+//        if(falseBB->get_terminator()== nullptr)
+//        {
             builder->create_br(contBB);
-        }
+//        }
     }
     builder->set_insert_point(contBB);
     auto tmpBB=BasicBlock::create(module.get(),"",cur_fun);
