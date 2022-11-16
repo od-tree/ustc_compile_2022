@@ -13,6 +13,9 @@
 * [lab3](./Documentations/3-ir-gen/)
   + DDL：2022-11-13 23:59:59 (UTC+8)
 
+* [lab4.1](./Documentations/4.1-ssa/)
+  + DDL：2022-11-27 23:59:59 (UTC+8)
+
 ## FAQ: How to merge upstream remote branches
 
 In brief, you need another alias for upstream repository (we assume you are now in your local copy of forked repository on Gitlab):
