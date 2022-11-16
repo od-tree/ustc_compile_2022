@@ -17,6 +17,7 @@ void Value::replace_all_use_with(Value *new_val) {
         assert(val && "new_val is not a user");
         val->set_operand(use.arg_no_, new_val);
     }
+    use_list_.clear();
 }
 
 void Value::remove_use(Value *val) {

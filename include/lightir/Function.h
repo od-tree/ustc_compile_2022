@@ -20,6 +20,7 @@ class FunctionType;
 
 class Function : public Value, public llvm::ilist_node<Function> {
   public:
+    Function(const Function &) = delete;
     Function(FunctionType *ty, const std::string &name, Module *parent);
     virtual ~Function();
     static Function *create(FunctionType *ty, const std::string &name, Module *parent);

@@ -49,7 +49,7 @@ class BasicBlock : public Value, public llvm::ilist_node<BasicBlock> {
     void add_instr_begin(Instruction *instr);
 
     void delete_instr(Instruction *instr);
-
+    void erase_instr(Instruction *instr);
     bool empty() { return instr_list_.empty(); }
 
     int get_num_of_instr() { return instr_list_.size(); }
@@ -60,6 +60,7 @@ class BasicBlock : public Value, public llvm::ilist_node<BasicBlock> {
     virtual std::string print() override;
 
   private:
+    BasicBlock(const BasicBlock &) = delete;
     explicit BasicBlock(Module *m, const std::string &name, Function *parent);
     std::list<BasicBlock *> pre_bbs_;
     std::list<BasicBlock *> succ_bbs_;

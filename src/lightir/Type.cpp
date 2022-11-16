@@ -114,7 +114,8 @@ IntegerType *IntegerType::get(unsigned num_bits, Module *m) {
     } else if (num_bits == 32) {
         return m->get_int32_type();
     } else {
-        assert("IntegerType::get has error num_bits");
+        assert(false and "IntegerType::get has error num_bits");
+        return nullptr;
     }
 }
 

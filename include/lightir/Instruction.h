@@ -45,6 +45,7 @@ class Instruction : public User, public llvm::ilist_node<Instruction> {
     // ty here is result type
     Instruction(Type *ty, OpID id, unsigned num_ops, BasicBlock *parent);
     Instruction(Type *ty, OpID id, unsigned num_ops);
+    Instruction(const Instruction &) = delete;
     virtual ~Instruction() = default;
     inline const BasicBlock *get_parent() const { return parent_; }
     inline BasicBlock *get_parent() { return parent_; }

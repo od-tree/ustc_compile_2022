@@ -9,6 +9,7 @@ target_link_libraries(
     IR_lib
     common
     syntax
+    OP_lib
 )
 
 install(

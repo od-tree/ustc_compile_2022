@@ -22,6 +22,10 @@ void BasicBlock::delete_instr(Instruction *instr) {
     instr_list_.remove(instr);
     instr->remove_use_of_ops();
 }
+void BasicBlock::erase_instr(Instruction *instr) {
+    instr->remove_use_of_ops();
+    instr_list_.erase(instr);
+}
 
 const Instruction *BasicBlock::get_terminator() const {
     if (instr_list_.empty()) {
