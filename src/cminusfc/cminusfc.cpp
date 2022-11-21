@@ -1,4 +1,9 @@
+#include "Dominators.h"
+#include "Mem2Reg.hpp"
+#include "PassManager.hpp"
 #include "cminusf_builder.hpp"
+#include "logging.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -6,20 +11,15 @@
 using namespace std::literals::string_literals;
 
 void print_help(std::string exe_name) {
-    std::cout << "Usage: " << exe_name <<
-        " [ -h | --help ] [ -o <target-file> ] [ -emit-llvm ] <input-file>" << std::endl;
+    std::cout << "Usage: " << exe_name << " [ -h | --help ] [ -o <target-file> ] [ -emit-llvm ] [-mem2reg] <input-file>"
+              << std::endl;
 }
-
 
 int main(int argc, char **argv) {
     std::string target_path;
     std::string input_path;
 
     bool mem2reg = false;
-    bool const_propagation = false;
-    bool activevars = false;
-    bool loop_inv_hoist = false;
-    bool loop_search = false;
     bool emit = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -38,14 +38,6 @@ int main(int argc, char **argv) {
             emit = true;
         } else if (argv[i] == "-mem2reg"s) {
             mem2reg = true;
-        } else if (argv[i] == "-loop-search"s) {
-            loop_search = true;
-        } else if (argv[i] == "-loop-inv-hoist"s) {
-            loop_inv_hoist = true;
-        } else if (argv[i] == "-const-propagation"s) {
-            const_propagation = true;
-        } else if (argv[i] == "-active-vars"s) {
-            activevars = true;
         } else {
             if (input_path.empty()) {
                 input_path = argv[i];
@@ -85,6 +77,14 @@ int main(int argc, char **argv) {
 
     auto m = builder.getModule();
 
+    m->set_print_name();
+    PassManager PM(m.get());
+
+    if (mem2reg) {
+        PM.add_pass<Mem2Reg>(emit);
+    }
+    PM.run();
+
     auto IR = m->print();
 
     std::ofstream output_stream;
@@ -96,16 +96,17 @@ int main(int argc, char **argv) {
     output_stream.close();
     if (!emit) {
         std::string lib_path = argv[0];
-        lib_path.erase(lib_path.rfind('/')) += "/libcminus_io.a";
-        auto command_string = "clang -O0 -w "s + target_path + ".ll -o " + target_path + " " + lib_path;
-        int re_code0 = std::system(command_string.c_str());
-        command_string = "rm "s + target_path + ".ll";
-        int re_code1 = std::system(command_string.c_str());
+        auto idx = lib_path.rfind('/');
+        if (idx != std::string::npos)
+            lib_path.erase(lib_path.rfind('/'));
+        auto cmd_str = "clang -O0 -w "s + target_path + ".ll -o " + target_path + " -L" + lib_path + " -lcminus_io";
+        int re_code0 = std::system(cmd_str.c_str());
+        cmd_str = "rm "s + target_path + ".ll";
+        int re_code1 = std::system(cmd_str.c_str());
         if (re_code0 == 0 && re_code1 == 0)
             return 0;
         else
             return 1;
     }
-
     return 0;
 }
