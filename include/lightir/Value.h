@@ -1,12 +1,14 @@
 #ifndef SYSYC_VALUE_H
 #define SYSYC_VALUE_H
 
+#include <functional>
 #include <iostream>
 #include <list>
 #include <string>
 
 class Type;
 class Value;
+class User;
 
 struct Use {
     Value *val_;
@@ -35,6 +37,8 @@ class Value {
     std::string get_name() const;
 
     void replace_all_use_with(Value *new_val);
+    /// replace `value` with `new_val` when the user of value satisfies predicate `pred`
+    void replace_use_with_when(Value *new_val, std::function<bool(User *)> pred);
     void remove_use(Value *val);
 
     virtual std::string print() = 0;

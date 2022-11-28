@@ -24,3 +24,17 @@ void Value::remove_use(Value *val) {
     auto is_val = [val](const Use &use) { return use.val_ == val; };
     use_list_.remove_if(is_val);
 }
+
+void Value::replace_use_with_when(Value *new_val, std::function<bool(User *)> pred) {
+    for (auto it = use_list_.begin(); it != use_list_.end();) {
+        auto use = *it;
+        auto val = dynamic_cast<User *>(use.val_);
+        assert(val && "new_val is not a user");
+        if (not pred(val)) {
+            ++it;
+            continue;
+        }
+        val->set_operand(use.arg_no_, new_val);
+        it = use_list_.erase(it);
+    }
+}
