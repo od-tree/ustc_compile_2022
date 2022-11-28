@@ -260,7 +260,7 @@ valuePhiFunc(ve,P)
 
 ## 3. 实验内容
 
-在本次实验中，请仔细阅读[3.2 GVN pass 实现内容要求](#32-gvn-pass-实现内容要求)，根据要求补全`src/optimization/GVN.cpp`，`include/optimization/GVN.cpp`中关于 GVN pass 数据流分析部分，同时需要在 `Reports/4-ir-opt/` 目录下撰写实验报告。**为了在评测中统一分析结果，请大家采用 lab3 的 TA-impl 分支提供的答案来继续后续实验。**
+在本次实验中，请仔细阅读[3.1 GVN pass 实现内容要求](#31-gvn-pass-实现内容要求)，根据要求补全`src/optimization/GVN.cpp`，`include/optimization/GVN.h`中关于 GVN pass 数据流分析部分，同时需要在 `Reports/4-ir-opt/` 目录下撰写实验报告。**为了在评测中统一分析结果，请大家采用 lab3 的 TA-impl 分支提供的[答案](http://202.38.79.174/compiler_staff/2022fall-compiler_cminus/-/blob/TA-impl/src/cminusfc/cminusf_builder.cpp)来完成后续实验。**
 ### 3.1 GVN pass 实现内容要求
 
 GVN 通过数据流分析来检测冗余的变量和计算，通过替换和死代码删除结合，实现优化效果。前述的例子中主要以二元运算语句来解释原理，且助教为大家提供了代码替换和删除的逻辑，除此之外，需要完成的方向有：
