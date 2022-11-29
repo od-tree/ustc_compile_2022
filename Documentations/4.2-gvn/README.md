@@ -223,9 +223,11 @@ Intersect(Ci, Cj)
     return Ck
 ```
 
-`TransferFunction` 接受一个赋值语句 x=e（x是变量，e为表达式），与一个 partition $`PIN_s`$ 。其中 getVN 从一个 partition 中根据 e 来找到对应的编号。
+`TransferFunction` 接受一个赋值语句 x=e（x是变量，e为表达式），与一个 partition $`PIN_s`$ 。其中 valueExpr 接受一个 expression 返回其对应的 value expression，由于 value expression 是由变量和操作符以及value expression 递归定义的，因此需要建立 e 中的操作数变量与其对应的 value expression 关联，在伪代码的基础上，需要为 valueExpr 函数添加 partition $`PIN_s`$ 作为参数。而 getVN 从一个 partition 中根据 e 来找到对应的编号。  
 
-注： 在 lightir 的设计中，普通语句的 x 与 e 存在同一个类中，而 phi 语句中需要经转换为 copy 语句，x 与 e 与普通语句会有一些不同，需要仔细思考区分一下。
+**注1**： 在 lightir 的设计中，普通语句的 x 与 e 存在同一个 Instruction 类中，参考[lightir核心类]()，Instruction 本身可以视作为 x，而通过 Instruction 成员运算符，和成员操作数可以抽象的组成 expression e。  
+
+**注2**： phi 语句中需要经转换为 copy 语句，x 与 e 将不存在同一个 Instruction 中，请仔细思考区分一下。
 
 ```clike
 TransferFunction(x = e, PINs)
@@ -265,7 +267,7 @@ valuePhiFunc(ve,P)
 
 GVN 通过数据流分析来检测冗余的变量和计算，通过替换和死代码删除结合，实现优化效果。前述的例子中主要以二元运算语句来解释原理，且助教为大家提供了代码替换和删除的逻辑，除此之外，需要完成的方向有：
 
-1. 对冗余指令的检测与消除包括（二元运算指令，cmp，gep，类型转换指令）
+1. 对冗余指令的检测与消除包括（二元运算指令，cmp，gep，类型转换指令） 
 
 2. 对纯函数的冗余调用消除（助教提供了纯函数分析，见[FuncInfo.h](../../include/optimization/FuncInfo.h)）
 
