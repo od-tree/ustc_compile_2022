@@ -55,8 +55,8 @@ class Instruction : public User, public llvm::ilist_node<Instruction> {
     Module *get_module();
 
     OpID get_instr_type() const { return op_id_; }
-    std::string get_instr_op_name() {
-        switch (op_id_) {
+    static std::string get_instr_op_name(OpID id) {
+        switch (id) {
         case ret: return "ret"; break;
         case br: return "br"; break;
         case add: return "add"; break;
@@ -82,6 +82,7 @@ class Instruction : public User, public llvm::ilist_node<Instruction> {
         default: return ""; break;
         }
     }
+    std::string get_instr_op_name() { return get_instr_op_name(op_id_); }
 
     bool is_void() {
         return ((op_id_ == ret) || (op_id_ == br) || (op_id_ == store) ||
