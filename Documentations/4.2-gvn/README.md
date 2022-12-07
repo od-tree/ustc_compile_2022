@@ -523,23 +523,9 @@ root@3fd22a9ed627:/labs/2022fall-compiler_cminus-taversion/tests/4-ir-opt#
 
 * 迟交规定
 
-  * `Soft Deadline`: 2022/12/12 23:59:59 (北京标准时间，UTC+8)
+  * `Deadline`: 2023/01/14 23:59:59 (北京标准时间，UTC+8)
 
-  * `Hard Deadline`: 2022/12/19 23:59:59 (北京标准时间，UTC+8)
-
-  * 迟交需要邮件通知 TA :
-    * 邮箱:
-    chen16614@mail.ustc.edu.cn 抄送 farmerzhang1@mail.ustc.edu.cn
-    * 邮件主题: lab4.2迟交-学号
-    * 内容: 包括迟交原因、最后版本commitID、迟交时间等
-
-  * 迟交分数
-    * x为迟交天数(对于`Soft Deadline`而言)，grade为满分
-      ``` bash
-      final_grade = grade, x = 0
-      final_grade = grade * (0.9)^x, 0 < x <= 7
-      final_grade = 0, x > 7 # 这一条严格执行,请对自己负责
-      ```
+    本次实验不接受补交
 
 * 关于抄袭和雷同
   经过助教和老师判定属于实验抄袭或雷同情况，所有参与方一律零分，不接受任何解释和反驳（严禁对开源代码或者其他同学代码的直接搬运）。

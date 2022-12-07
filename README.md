@@ -17,7 +17,7 @@
   + DDL：2022-11-27 23:59:59 (UTC+8)
 
 * [lab4.2](./Documentations/4.2-gvn/)
-  + DDL: 2022-12-12 23:59:59 (UTC+8)
+  + DDL: 2023-01-14 23:59:59 (UTC+8)
 
 ## FAQ: How to merge upstream remote branches
 
