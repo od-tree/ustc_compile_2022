@@ -158,7 +158,7 @@ class GVN : public Pass {
     void detectEquivalences();
     partitions join(const partitions &P1, const partitions &P2);
     std::shared_ptr<CongruenceClass> intersect(std::shared_ptr<CongruenceClass>, std::shared_ptr<CongruenceClass>);
-    partitions transferFunction(Instruction *x, Value *e, partitions pin);
+    partitions transferFunction(Value *x, Instruction *e, partitions pin);
     std::shared_ptr<GVNExpression::PhiExpression> valuePhiFunc(std::shared_ptr<GVNExpression::Expression>,
                                                                const partitions &);
     std::shared_ptr<GVNExpression::Expression> valueExpr(Instruction *instr);

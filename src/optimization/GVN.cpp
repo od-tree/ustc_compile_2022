@@ -148,10 +148,19 @@ void GVN::detectEquivalences() {
         // see the pseudo code in documentation
         for (auto &bb : func_->get_basic_blocks()) { // you might need to visit the blocks in depth-first order
             // get PIN of bb by predecessor(s)
+            auto p= clone(pin_[&bb]);
             // iterate through all instructions in the block
             // and the phi instruction in all the successors
-
+            for(auto &instr:bb.get_instructions())
+            {
+                p= transferFunction(&instr,&instr,p);
+            }
+            if(p!=pout_[&bb])
+            {
+                changed=true;
+            }
             // check changes in pout
+            pout_[&bb]=std::move(p);
         }
     } while (changed);
 }
@@ -164,9 +173,24 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr) {
 // instruction of the form `x = e`, mostly x is just e (SSA), but for copy stmt x is a phi instruction in the
 // successor. Phi values (not copy stmt) should be handled in detectEquiv
 /// \param bb basic block in which the transfer function is called
-GVN::partitions GVN::transferFunction(Instruction *x, Value *e, partitions pin) {
+GVN::partitions GVN::transferFunction(Value *x, Instruction *e, partitions pin) {
     partitions pout = clone(pin);
     // TODO: get different ValueExpr by Instruction::OpID, modify pout
+    for(auto i:pout)
+    {
+       if( i->members_.find(x)!=i->members_.end());
+       {
+           i->members_.erase(x);
+       }
+    }
+    auto ve= valueExpr(e);
+
+//    auto cc= createCongruenceClass(next_value_number_++);
+//    cc->leader_=x;
+//    cc->members_ ={x};
+//    cc->value_expr_= valueExpr(dynamic_cast<Instruction *>(e));
+//    pout.insert(cc);
+
     return pout;
 }
 
