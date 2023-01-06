@@ -126,6 +126,7 @@ struct CongruenceClass {
     // value φ-function is an annotation of the congruence class
     std::shared_ptr<GVNExpression::PhiExpression> value_phi_;
     // equivalent variables in one congruence class
+    std::shared_ptr<GVNExpression::ConstantExpression> value_const_;
     std::set<Value *> members_;
 
     CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{}, members_{} {}

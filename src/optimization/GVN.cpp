@@ -184,7 +184,12 @@ GVN::partitions GVN::transferFunction(Value *x, Instruction *e, partitions pin) 
        }
     }
     auto ve= valueExpr(e);
+    auto vpf= valuePhiFunc(ve,pin);
+    bool judge= false;
+    for(auto i:pout)
+    {
 
+    }
 //    auto cc= createCongruenceClass(next_value_number_++);
 //    cc->leader_=x;
 //    cc->members_ ={x};
@@ -321,10 +326,23 @@ GVN::partitions GVN::clone(const partitions &p) {
 
 bool operator==(const GVN::partitions &p1, const GVN::partitions &p2) {
     // TODO: how to compare partitions?
-    return false;
+    if(p1.size()!=p2.size())
+    {
+        return false;
+    }
+    for(auto iter1=p1.begin(),iter2=p2.begin();iter1!=p1.end();iter1++,iter2++)
+    {
+        if(!(*(*iter1).get()==*(*iter2).get()))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool CongruenceClass::operator==(const CongruenceClass &other) const {
     // TODO: which fields need to be compared?
-    return false;
+    return this->members_==other.members_;
+
+//    return false;
 }
