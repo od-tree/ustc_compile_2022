@@ -141,10 +141,13 @@ std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass>
 }
 
 void GVN::detectEquivalences() {
-    bool changed = false;
+    bool changed{};
     // initialize pout with top
     // iterate until converge
+    BasicBlock *entry=func_->get_entry_block();
+    pin_[entry]={};
     do {
+        changed= false;
         // see the pseudo code in documentation
         for (auto &bb : func_->get_basic_blocks()) { // you might need to visit the blocks in depth-first order
             // get PIN of bb by predecessor(s)
@@ -165,37 +168,234 @@ void GVN::detectEquivalences() {
     } while (changed);
 }
 
-shared_ptr<Expression> GVN::valueExpr(Instruction *instr) {
+shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
     // TODO
+    if(instr->isBinary())
+    {
+        auto oprands=instr->get_operands();
+        auto lconst=dynamic_cast<Constant*>(oprands[0]);
+        auto rconst=dynamic_cast<Constant*>(oprands[1]);
+        if(lconst!= nullptr)
+        {
+            if(rconst!= nullptr)
+            {
+                auto cons=folder_->compute(instr,lconst,rconst);
+                auto consExp=ConstantExpression::create(cons);
+//                for(auto &i:pin)
+//                {
+//                    if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
+//                    {
+//                        return i->value_expr_;
+//                    }
+//                }
+                return consExp;
+            }
+        }
+
+        shared_ptr<Expression> lop= nullptr;
+        shared_ptr<Expression> rop= nullptr;
+        for(auto &i:pin)
+        {
+//            if( i->members_.count(oprands[0]));
+//            {
+//                lop=i->value_expr_;
+//            }
+//            if( i->members_.count(oprands[1]));
+//            {
+//                rop=i->value_expr_;
+//            }
+            for(auto &j:i->members_)
+            {
+                if(j==oprands[0])
+                {
+                    lop=i->value_expr_;
+                }
+                if(j==oprands[1])
+                {
+                    rop=i->value_expr_;
+                }
+            }
+        }
+        if((lconst!= nullptr)&&(rop!=nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+        {
+            auto cons=folder_->compute(instr,lconst, std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+            auto consExp=ConstantExpression::create(cons);
+//            for(auto &i:pin)
+//            {
+//                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
+//                {
+//                    return i->value_expr_;
+//                }
+//            }
+            return consExp;
+        }
+        if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rconst!= nullptr))
+        {
+            auto cons=folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),rconst);
+            auto consExp=ConstantExpression::create(cons);
+//            for(auto &i:pin)
+//            {
+//                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
+//                {
+//                    return i->value_expr_;
+//                }
+//            }
+            return consExp;
+        }
+        if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rop!= nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+        {
+            auto cons=folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+            auto consExp=ConstantExpression::create(cons);
+            //            for(auto &i:pin)
+            //            {
+            //                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
+            //                {
+            //                    return i->value_expr_;
+            //                }
+            //            }
+            return consExp;
+        }
+        if(lop==nullptr&&lconst== nullptr)
+        {
+            lop=SingleExpression::create(oprands[0]);
+        }
+        if(rop== nullptr&&rconst== nullptr)
+        {
+            rop=SingleExpression::create(oprands[1]);
+        }
+        if(lconst!= nullptr)
+        {
+            lop=ConstantExpression::create(lconst);
+        }
+        if(rconst!= nullptr)
+        {
+            rop=ConstantExpression::create(rconst);
+        }
+        return BinaryExpression::create(instr->get_instr_type(),lop,rop);
+    }
+    if(instr->is_call())
+    {
+        return FuncExpression::create(instr->get_operands(),func_info_->is_pure_function(dynamic_cast<Function *>(instr->get_operand(0))),instr);
+    }
     return {};
 }
 
 // instruction of the form `x = e`, mostly x is just e (SSA), but for copy stmt x is a phi instruction in the
 // successor. Phi values (not copy stmt) should be handled in detectEquiv
 /// \param bb basic block in which the transfer function is called
-GVN::partitions GVN::transferFunction(Value *x, Instruction *e, partitions pin) {
+GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) {
     partitions pout = clone(pin);
+    if(x->is_void())
+    {
+        return pout;
+    }
     // TODO: get different ValueExpr by Instruction::OpID, modify pout
-    for(auto i:pout)
+    for(auto &i:pout)
     {
        if( i->members_.find(x)!=i->members_.end());
        {
            i->members_.erase(x);
        }
     }
-    auto ve= valueExpr(e);
+    auto ve= valueExpr(x,pin);
     auto vpf= valuePhiFunc(ve,pin);
     bool judge= false;
-    for(auto i:pout)
-    {
 
+
+    if(ve!= nullptr) {
+        for (auto &i : pout) {
+            switch (ve->get_expr_type()) {
+                case Expression::e_constant:
+                {
+                    auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
+                    if((i->value_const_!= nullptr)&&(i->value_const_->equiv(ve_cons.get())))
+                    {
+                        judge =true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
+                case Expression::e_bin:
+                {
+                    auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
+                    if ((i->value_bin!= nullptr)&&(i->value_bin->equiv(ve_bin.get())))
+                    {
+                        judge = true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
+                case Expression::e_phi:
+                {
+                    auto ve_phi=std::dynamic_pointer_cast<PhiExpression>(ve);
+
+                    break;
+                }
+                case Expression::e_single: break;
+                case Expression::e_func: {
+                    auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
+                    if((i->value_func!= nullptr)&&(i->value_func->equiv(ve_func.get())))
+                    {
+                        judge =true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
+            }
+        }
     }
-//    auto cc= createCongruenceClass(next_value_number_++);
-//    cc->leader_=x;
-//    cc->members_ ={x};
-//    cc->value_expr_= valueExpr(dynamic_cast<Instruction *>(e));
-//    pout.insert(cc);
 
+    if(ve!= nullptr) {
+        if (!judge) {
+            auto cc = createCongruenceClass(next_value_number_++);
+
+            cc->members_ = {x};
+            cc->value_expr_ = ve;
+//            if(x->isBinary())
+//            {
+//                auto operands=x->get_operands();
+//
+//            }
+            switch (ve->get_expr_type()) {
+                case Expression::e_constant:
+                {
+                    auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
+                    cc->leader_ = ve_cons->get_cons();
+                    cc->value_const_=ve_cons;
+                    break;
+                }
+                case Expression::e_bin: {
+                    auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
+                    cc->leader_=x;
+                    cc->value_bin = ve_bin;
+                    break;
+                }
+                case Expression::e_phi: {
+                    cc->leader_=x;
+                    cc->value_phi_=std::dynamic_pointer_cast<PhiExpression>(ve);
+                break;
+                }
+
+                case Expression::e_single: break;
+                case Expression::e_func:{
+                    auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
+                    cc->leader_=x;
+                    cc->value_func=ve_func;
+                    break;
+                }
+            }
+            pout.insert(cc);
+        }
+    }
+    if(ve== nullptr)
+    {
+        auto cc = createCongruenceClass(next_value_number_++);
+        cc->leader_ = x;
+        cc->members_ = {x};
+        cc->value_expr_ = valueExpr(dynamic_cast<Instruction*>(e),pin);
+//        cc->value_single
+        pout.insert(cc);
+    }
     return pout;
 }
 
@@ -252,7 +452,8 @@ void GVN::replace_cc_members() {
 void GVN::run() {
     std::ofstream gvn_json;
     if (dump_json_) {
-        gvn_json.open("gvn.json", std::ios::out);
+//        gvn_json.open("/home/ly/2022fall-compiler_cminus/cmake-build-debug/gvn.json", std::ios::out);
+    gvn_json.open("gvn.json", std::ios::out);
         gvn_json << "[";
     }
 
@@ -307,6 +508,8 @@ bool GVNExpression::operator==(const Expression &lhs, const Expression &rhs) {
     case Expression::e_constant: return equiv_as<ConstantExpression>(lhs, rhs);
     case Expression::e_bin: return equiv_as<BinaryExpression>(lhs, rhs);
     case Expression::e_phi: return equiv_as<PhiExpression>(lhs, rhs);
+    case Expression::e_single: return equiv_as<SingleExpression>(lhs,rhs);
+    case Expression::e_func: return equiv_as<FuncExpression>(lhs,rhs);
     }
 }
 
@@ -332,7 +535,7 @@ bool operator==(const GVN::partitions &p1, const GVN::partitions &p2) {
     }
     for(auto iter1=p1.begin(),iter2=p2.begin();iter1!=p1.end();iter1++,iter2++)
     {
-        if(!(*(*iter1).get()==*(*iter2).get()))
+        if(!((**iter1)==(**iter2)))
         {
             return false;
         }

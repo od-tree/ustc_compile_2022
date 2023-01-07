@@ -40,7 +40,7 @@ class ConstFolder {
 class Expression {
   public:
     // TODO: you need to extend expression types according to testcases
-    enum gvn_expr_t { e_constant, e_bin, e_phi };
+    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func};
     Expression(gvn_expr_t t) : expr_type(t) {}
     virtual ~Expression() = default;
     virtual std::string print() = 0;
@@ -60,7 +60,7 @@ class ConstantExpression : public Expression {
     // we leverage the fact that constants in lightIR have unique addresses
     bool equiv(const ConstantExpression *other) const { return c_ == other->c_; }
     ConstantExpression(Constant *c) : Expression(e_constant), c_(c) {}
-
+    Constant* get_cons() const { return c_; }
   private:
     Constant *c_;
 };
@@ -110,7 +110,60 @@ class PhiExpression : public Expression {
   private:
     std::shared_ptr<Expression> lhs_, rhs_;
 };
+class SingleExpression : public Expression {
+  public:
+    static std::shared_ptr<SingleExpression> create(Value* a) {
+        return std::make_shared<SingleExpression>(a);
+    }
+    virtual std::string print() {
+        return var->print();
+    }
+    bool equiv(const SingleExpression *other) const {
+        return var==other->var;
+    }
+    SingleExpression(Value *a)
+        : Expression(e_single),var(a){}
+
+  private:
+    Value* var;
+};
+class FuncExpression : public Expression {
+  public:
+    static std::shared_ptr<FuncExpression> create(std::vector<Value*>a,bool isPure,Instruction* xx) {
+        return std::make_shared<FuncExpression>(a,isPure,xx);
+    }
+    virtual std::string print() {
+//        return var->print();
+        return "";
+    }
+
+    FuncExpression(std::vector<Value*> a,bool isPure,Instruction *xx)
+        : Expression(e_func),operands(a),pure(isPure),x(xx){}
+
+    bool equiv(const FuncExpression *other) const {
+        if(x==other->x)
+        {
+            return true;
+        }
+        if (!pure || !other->pure)
+            return false;
+        else{
+            if(operands==other->operands)
+            {
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+    }
+  private:
+    std::vector<Value*> operands;
+    bool pure;
+    Instruction* x;
+};
 } // namespace GVNExpression
+
 
 /**
  * Congruence class in each partitions
@@ -127,9 +180,12 @@ struct CongruenceClass {
     std::shared_ptr<GVNExpression::PhiExpression> value_phi_;
     // equivalent variables in one congruence class
     std::shared_ptr<GVNExpression::ConstantExpression> value_const_;
+    std::shared_ptr<GVNExpression::BinaryExpression> value_bin;
+    std::shared_ptr<GVNExpression::SingleExpression> value_single;
+    std::shared_ptr<GVNExpression::FuncExpression> value_func;
     std::set<Value *> members_;
 
-    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{}, members_{} {}
+    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},members_{} {}
 
     bool operator<(const CongruenceClass &other) const { return this->index_ < other.index_; }
     bool operator==(const CongruenceClass &other) const;
@@ -159,10 +215,10 @@ class GVN : public Pass {
     void detectEquivalences();
     partitions join(const partitions &P1, const partitions &P2);
     std::shared_ptr<CongruenceClass> intersect(std::shared_ptr<CongruenceClass>, std::shared_ptr<CongruenceClass>);
-    partitions transferFunction(Value *x, Instruction *e, partitions pin);
+    partitions transferFunction(Instruction *x,Value *e, partitions pin);
     std::shared_ptr<GVNExpression::PhiExpression> valuePhiFunc(std::shared_ptr<GVNExpression::Expression>,
                                                                const partitions &);
-    std::shared_ptr<GVNExpression::Expression> valueExpr(Instruction *instr);
+    std::shared_ptr<GVNExpression::Expression> valueExpr(Instruction *instr,partitions pin);
     std::shared_ptr<GVNExpression::Expression> getVN(const partitions &pout,
                                                      std::shared_ptr<GVNExpression::Expression> ve);
 
