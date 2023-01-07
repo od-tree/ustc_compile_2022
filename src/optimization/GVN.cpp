@@ -146,6 +146,11 @@ void GVN::detectEquivalences() {
     // iterate until converge
     BasicBlock *entry=func_->get_entry_block();
     pin_[entry]={};
+//    pout_[entry]= transferFunction()
+    for(auto &bb:func_->get_basic_blocks())
+    {
+//        pout_[&bb]=
+    }
     do {
         changed= false;
         // see the pseudo code in documentation
@@ -181,13 +186,6 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
             {
                 auto cons=folder_->compute(instr,lconst,rconst);
                 auto consExp=ConstantExpression::create(cons);
-//                for(auto &i:pin)
-//                {
-//                    if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
-//                    {
-//                        return i->value_expr_;
-//                    }
-//                }
                 return consExp;
             }
         }
@@ -196,14 +194,6 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
         shared_ptr<Expression> rop= nullptr;
         for(auto &i:pin)
         {
-//            if( i->members_.count(oprands[0]));
-//            {
-//                lop=i->value_expr_;
-//            }
-//            if( i->members_.count(oprands[1]));
-//            {
-//                rop=i->value_expr_;
-//            }
             for(auto &j:i->members_)
             {
                 if(j==oprands[0])
@@ -220,39 +210,18 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
         {
             auto cons=folder_->compute(instr,lconst, std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
             auto consExp=ConstantExpression::create(cons);
-//            for(auto &i:pin)
-//            {
-//                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
-//                {
-//                    return i->value_expr_;
-//                }
-//            }
             return consExp;
         }
         if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rconst!= nullptr))
         {
             auto cons=folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),rconst);
             auto consExp=ConstantExpression::create(cons);
-//            for(auto &i:pin)
-//            {
-//                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
-//                {
-//                    return i->value_expr_;
-//                }
-//            }
             return consExp;
         }
         if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rop!= nullptr)&&(rop->get_expr_type()==Expression::e_constant))
         {
             auto cons=folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
             auto consExp=ConstantExpression::create(cons);
-            //            for(auto &i:pin)
-            //            {
-            //                if((i->value_expr_->get_expr_type()== Expression::e_constant)&&(i->value_const_->equiv(consExp.get())))
-            //                {
-            //                    return i->value_expr_;
-            //                }
-            //            }
             return consExp;
         }
         if(lop==nullptr&&lconst== nullptr)
