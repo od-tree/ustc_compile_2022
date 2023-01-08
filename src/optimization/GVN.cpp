@@ -131,13 +131,88 @@ static void print_partitions(const GVN::partitions &p) {
 
 GVN::partitions GVN::join(const partitions &P1, const partitions &P2) {
     // TODO: do intersection pair-wise
-    return {};
+    for(auto i:P1)
+    {
+        if(i->index_==0)
+        {
+            return P2;
+        }
+    }
+    for(auto i:P2)
+    {
+        if(i->index_==0)
+        {
+            return P1;
+        }
+    }
+    partitions p={};
+    for(auto &i:P1)
+    {
+        for(auto &j:P2)
+        {
+            auto Ck=intersect(i,j);
+            if(!Ck->members_.empty())
+            {
+                p.insert(Ck);
+            }
+        }
+    }
+    return p;
 }
 
 std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass> Ci,
                                                 std::shared_ptr<CongruenceClass> Cj) {
     // TODO
-    return {};
+    shared_ptr<CongruenceClass> cc;
+    if(Ci->index_==Cj->index_)
+    {
+        cc= createCongruenceClass(Ci->index_);
+        cc->value_expr_=Ci->value_expr_;
+        switch (Ci->value_expr_->get_expr_type()) {
+        case Expression::e_constant: {
+            cc->value_const_=std::dynamic_pointer_cast<ConstantExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_bin: {
+            cc->value_bin=std::dynamic_pointer_cast<BinaryExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_phi: {
+            cc->value_phi_=std::dynamic_pointer_cast<PhiExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_single: {
+            cc->value_single=std::dynamic_pointer_cast<SingleExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_func:{
+            cc->value_func=std::dynamic_pointer_cast<FuncExpression>(Ci->value_expr_);
+            break;
+        }
+        }
+    }
+    else
+    {
+        cc= createCongruenceClass(0);
+    }
+    for(auto& i:Ci->members_)
+    {
+        for(auto& j:Cj->members_)
+        {
+            if(i==j)
+            {
+                cc->members_.insert(i);
+            }
+        }
+    }
+    if((!cc->members_.empty())&&(cc->index_==0))
+    {
+        cc->index_==next_value_number_++;
+        auto ve_phi=PhiExpression::create(Ci->value_expr_,Cj->value_expr_);
+        cc->value_expr_=ve_phi;
+        cc->value_phi_=ve_phi;
+    }
+    return cc;
 }
 
 void GVN::detectEquivalences() {
@@ -146,17 +221,27 @@ void GVN::detectEquivalences() {
     // iterate until converge
     BasicBlock *entry=func_->get_entry_block();
     pin_[entry]={};
-//    pout_[entry]= transferFunction()
+    pout_[entry]={};
     for(auto &bb:func_->get_basic_blocks())
     {
-//        pout_[&bb]=
+        pout_[&bb].insert(createCongruenceClass(0));
     }
     do {
         changed= false;
         // see the pseudo code in documentation
         for (auto &bb : func_->get_basic_blocks()) { // you might need to visit the blocks in depth-first order
             // get PIN of bb by predecessor(s)
-            auto p= clone(pin_[&bb]);
+            auto pre_bolocks=bb.get_pre_basic_blocks();
+            partitions p;
+            if(pre_bolocks.size()>=2)
+            {
+                pin_[&bb]=join(pout_[pre_bolocks.front()],pout_[pre_bolocks.back()]);
+            }
+            else
+            {
+                pin_[&bb]=pout_[pre_bolocks.front()];
+            }
+            p=clone(pin_[&bb]);
             // iterate through all instructions in the block
             // and the phi instruction in all the successors
             for(auto &instr:bb.get_instructions())
@@ -168,6 +253,62 @@ void GVN::detectEquivalences() {
                 changed=true;
             }
             // check changes in pout
+            for(auto &nextBB:bb.get_succ_basic_blocks())
+            {
+                for(auto &instr:nextBB->get_instructions())
+                {
+                    if(instr.is_phi())
+                    {
+                        Value* op;
+                        bool judge=true;
+                        if(instr.get_operand(1)==nextBB)
+                        {
+                            op=instr.get_operand(0);
+                        }
+                        else
+                        {
+                            op=instr.get_operand(2);
+                        }
+                        for(auto &i:p)
+                        {
+                            for(auto &j:i->members_)
+                            {
+                                if(j==op)
+                                {
+                                    i->members_.insert(&instr);
+                                    judge=false;
+                                }
+                            }
+                        }
+                        if(judge)
+                        {
+                            auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(op));
+                            for(auto &i:p)
+                            {
+                                if((i->value_const_!= nullptr)&&(i->value_const_==cons_op))
+                                {
+                                    i->members_.insert(&instr);
+                                    judge=false;
+                                }
+                            }
+                            if(judge)
+                            {
+                                auto cc = createCongruenceClass(next_value_number_++);
+                                cc->leader_ =dynamic_cast<Constant *>(op);
+                                cc->members_ = {&instr};
+                                cc->value_expr_=cons_op;
+                                cc->value_const_=cons_op;
+                                //        cc->value_single
+                                p.insert(cc);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
             pout_[&bb]=std::move(p);
         }
     } while (changed);
@@ -254,7 +395,7 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
 /// \param bb basic block in which the transfer function is called
 GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) {
     partitions pout = clone(pin);
-    if(x->is_void())
+    if(x->is_void()||x->is_phi())
     {
         return pout;
     }
@@ -294,10 +435,13 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                     }
                     break;
                 }
-                case Expression::e_phi:
-                {
+                case Expression::e_phi: {
                     auto ve_phi=std::dynamic_pointer_cast<PhiExpression>(ve);
-
+                    if((i->value_phi_!= nullptr)&&(i->value_phi_->equiv(ve_phi.get())))
+                    {
+                        judge =true;
+                        i->members_.insert(x);
+                    }
                     break;
                 }
                 case Expression::e_single: break;
@@ -451,12 +595,14 @@ void GVN::run() {
             for (auto &cc : part)
                 LOG_INFO << utils::print_congruence_class(*cc);
         }
+
         if (dump_json_) {
             gvn_json << "{\n\"function\": ";
             gvn_json << "\"" << f.get_name() << "\", ";
             gvn_json << "\n\"pout\": " << utils::dump_bb2partition(pout_);
             gvn_json << "},";
         }
+
         replace_cc_members(); // don't delete instructions, just replace them
     }
     dce_->run(); // let dce do that for us
