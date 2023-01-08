@@ -212,7 +212,7 @@ std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass>
     }
     if((!cc->members_.empty())&&(cc->index_==0))
     {
-        cc->index_==next_value_number_++;
+        cc->index_=next_value_number_++;
         auto ve_phi=PhiExpression::create(Ci->value_expr_,Cj->value_expr_);
         cc->value_expr_=ve_phi;
         cc->value_phi_=ve_phi;
@@ -238,6 +238,7 @@ void GVN::detectEquivalences() {
         }
         pout_[&bb]=p_top;
     }
+    int count=0;
     do {
         changed= false;
         // see the pseudo code in documentation
@@ -328,6 +329,12 @@ void GVN::detectEquivalences() {
             }
             pout_[&bb]=std::move(p);
         }
+
+//        count++;
+//        if(count>=4)
+//        {
+//            changed=false;
+//        }
     } while (changed);
 }
 
@@ -525,7 +532,7 @@ shared_ptr<Expression> GVN::getVN(const partitions &pout, shared_ptr<Expression>
     // TODO: return what?
     for (auto it = pout.begin(); it != pout.end(); it++)
         if ((*it)->value_expr_ and *(*it)->value_expr_ == *ve)
-            return {};
+            return (*it)->value_expr_;
     return nullptr;
 }
 
@@ -652,19 +659,26 @@ bool operator==(const GVN::partitions &p1, const GVN::partitions &p2) {
     {
         return false;
     }
-    for(auto iter1=p1.begin(),iter2=p2.begin();iter1!=p1.end();iter1++,iter2++)
+    bool judge=true;
+    for(auto i:p1)
     {
-        if(!((**iter1)==(**iter2)))
+        judge= false;
+        for(auto j:p2)
         {
-            return false;
+            if(*i==*j)
+            {
+                judge= true;
+                break;
+            }
         }
+        return judge;
     }
-    return true;
+    return judge;
 }
 
 bool CongruenceClass::operator==(const CongruenceClass &other) const {
     // TODO: which fields need to be compared?
-    return this->members_==other.members_;
+    return std::tie(this->members_)==std::tie(other.members_);
 
 //    return false;
 }
