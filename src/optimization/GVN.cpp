@@ -250,10 +250,11 @@ void GVN::detectEquivalences() {
         }
         pout_[&bb]=p_top;
     }
-    auto count=0;
+//    auto count=0;
     do {
         changed= false;
         // see the pseudo code in documentation
+        first=true;
         for (auto &bb : func_->get_basic_blocks()) { // you might need to visit the blocks in depth-first order
             // get PIN of bb by predecessor(s)
             partitions p;
@@ -272,6 +273,32 @@ void GVN::detectEquivalences() {
             p = clone(pin_[&bb]);
             // iterate through all instructions in the block
             // and the phi instruction in all the successors
+            if(first)
+            {
+                first= false;
+                auto &glob=m_->get_global_variable();
+                for(auto &i:glob)
+                {
+                    auto cc = createCongruenceClass(next_value_number_++);
+                    auto single_expr=SingleExpression::create(&i);
+                    cc->leader_ =&i;
+                    cc->members_ = {&i};
+                    cc->value_expr_=single_expr;
+                    cc->value_single=single_expr;
+                    p.insert(cc);
+                }
+                auto &argv=func_->get_args();
+                for(auto &i:argv)
+                {
+                    auto cc = createCongruenceClass(next_value_number_++);
+                    auto single_expr=SingleExpression::create(i);
+                    cc->leader_ =i;
+                    cc->members_ = {i};
+                    cc->value_expr_=single_expr;
+                    cc->value_single=single_expr;
+                    p.insert(cc);
+                }
+            }
             for(auto &instr:bb.get_instructions())
             {
                 p= transferFunction(&instr,&instr,p);
@@ -293,13 +320,6 @@ void GVN::detectEquivalences() {
                             {
                                 p.erase(i);
                             }
-//                            for(auto &j:i->members_)
-//                            {
-//                                if(j==(&instr))
-//                                {
-//                                    i->members_.erase(j);
-//                                }
-//                            }
                         }
                         if(instr.get_operand(1)==&bb)
                         {
@@ -340,7 +360,6 @@ void GVN::detectEquivalences() {
                                 cc->members_ = {&instr};
                                 cc->value_expr_=cons_op;
                                 cc->value_const_=cons_op;
-                                //        cc->value_single
                                 p.insert(cc);
                             }
                         }
@@ -351,18 +370,13 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
+            utils::print_partitions(p);
             if(p!=pout_[&bb])
             {
                 changed=true;
             }
             pout_[&bb]=std::move(p);
         }
-
-//        count++;
-//        if(count>=10)
-//        {
-//            changed=false;
-//        }
     } while (changed);
 }
 
@@ -374,7 +388,30 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
     }
     if(instr->is_call())
     {
-        return FuncExpression::create(instr->get_operands(),func_info_->is_pure_function(dynamic_cast<Function *>(instr->get_operand(0))),instr);
+        std::vector<std::shared_ptr<Expression>> operands{};
+        for(int i=1;i<instr->get_operands().size();i++)
+        {
+            if(dynamic_cast<Constant*>(instr->get_operands()[i])!= nullptr)
+            {
+                auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(instr->get_operand(i)));
+                operands.push_back(cons_op);
+            }
+            else
+            {
+                for(auto &k:pin)
+                {
+                    for(auto &j:k->members_)
+                    {
+                        if(j==(instr->get_operand(i)))
+                        {
+                            operands.push_back(k->value_expr_);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return FuncExpression::create(instr->get_operand(0),operands,func_info_->is_pure_function(dynamic_cast<Function *>(instr->get_operand(0))),instr);
     }
     return SingleExpression::create(instr);
 }
