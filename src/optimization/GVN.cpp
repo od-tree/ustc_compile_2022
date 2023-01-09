@@ -276,10 +276,7 @@ void GVN::detectEquivalences() {
             {
                 p= transferFunction(&instr,&instr,p);
             }
-            if(p!=pout_[&bb])
-            {
-                changed=true;
-            }
+
             // check changes in pout
             for(auto &nextBB:bb.get_succ_basic_blocks())
             {
@@ -354,14 +351,18 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
+            if(p!=pout_[&bb])
+            {
+                changed=true;
+            }
             pout_[&bb]=std::move(p);
         }
 
-        count++;
-        if(count>=10)
-        {
-            changed=false;
-        }
+//        count++;
+//        if(count>=10)
+//        {
+//            changed=false;
+//        }
     } while (changed);
 }
 
