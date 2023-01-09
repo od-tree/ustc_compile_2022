@@ -206,6 +206,14 @@ std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass>
             cc->value_func=std::dynamic_pointer_cast<FuncExpression>(Ci->value_expr_);
             break;
         }
+        case Expression::e_cmp: {
+            cc->value_cmp=std::dynamic_pointer_cast<CmpExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_fcmp: {
+            cc->value_fcmp=std::dynamic_pointer_cast<FCmpExpression>(Ci->value_expr_);
+            break;
+        }
         }
     }
     else
@@ -266,7 +274,7 @@ void GVN::detectEquivalences() {
             {
                 pin_[&bb] = pout_[pre_bolocks.front()];
             }
-            if(pre_bolocks.size()==0)
+            if(pre_bolocks.empty())
             {
                 pin_[&bb]={};
             }
@@ -276,28 +284,7 @@ void GVN::detectEquivalences() {
             if(first)
             {
                 first= false;
-                auto &glob=m_->get_global_variable();
-                for(auto &i:glob)
-                {
-                    auto cc = createCongruenceClass(next_value_number_++);
-                    auto single_expr=SingleExpression::create(&i);
-                    cc->leader_ =&i;
-                    cc->members_ = {&i};
-                    cc->value_expr_=single_expr;
-                    cc->value_single=single_expr;
-                    p.insert(cc);
-                }
-                auto &argv=func_->get_args();
-                for(auto &i:argv)
-                {
-                    auto cc = createCongruenceClass(next_value_number_++);
-                    auto single_expr=SingleExpression::create(i);
-                    cc->leader_ =i;
-                    cc->members_ = {i};
-                    cc->value_expr_=single_expr;
-                    cc->value_single=single_expr;
-                    p.insert(cc);
-                }
+                globel_and_argv(p);
             }
             for(auto &instr:bb.get_instructions())
             {
@@ -370,7 +357,7 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
-            utils::print_partitions(p);
+//            utils::print_partitions(p);
             if(p!=pout_[&bb])
             {
                 changed=true;
@@ -378,6 +365,30 @@ void GVN::detectEquivalences() {
             pout_[&bb]=std::move(p);
         }
     } while (changed);
+}
+void GVN::globel_and_argv(GVN::partitions &p) {
+    auto &glob= m_->get_global_variable();
+    for(auto &i:glob)
+    {
+        auto cc = createCongruenceClass(next_value_number_++);
+        auto single_expr=SingleExpression::create(&i);
+        cc->leader_ =&i;
+        cc->members_ = {&i};
+        cc->value_expr_=single_expr;
+        cc->value_single=single_expr;
+        p.insert(cc);
+    }
+    auto &argv= func_->get_args();
+    for(auto &i:argv)
+    {
+        auto cc = createCongruenceClass(next_value_number_++);
+        auto single_expr=SingleExpression::create(i);
+        cc->leader_ =i;
+        cc->members_ = {i};
+        cc->value_expr_=single_expr;
+        cc->value_single=single_expr;
+        p.insert(cc);
+    }
 }
 
 shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
@@ -388,32 +399,176 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
     }
     if(instr->is_call())
     {
-        std::vector<std::shared_ptr<Expression>> operands{};
-        for(int i=1;i<instr->get_operands().size();i++)
+        return funcValueExpr(instr, pin);
+    }
+    if(instr->is_cmp())
+    {
+        return cmpValueExpr(instr, pin);
+    }
+    if(instr->is_fcmp())
+    {
+        return fcmpValueExpr(instr, pin);
+    }
+    return SingleExpression::create(instr);
+}
+shared_ptr<Expression> GVN::fcmpValueExpr(Instruction *instr, GVN::partitions &pin) {
+    auto oprands=instr->get_operands();
+    auto lconst=dynamic_cast<Constant*>(oprands[0]);
+    auto rconst=dynamic_cast<Constant*>(oprands[1]);
+    if(lconst!= nullptr)
+    {
+        if(rconst!= nullptr)
         {
-            if(dynamic_cast<Constant*>(instr->get_operands()[i])!= nullptr)
+            auto cons= folder_->compute(instr,lconst,rconst);
+            auto consExp=ConstantExpression::create(cons);
+            return consExp;
+        }
+    }
+
+    std::shared_ptr<Expression> lop= nullptr;
+    std::shared_ptr<Expression> rop= nullptr;
+    for(auto &i:pin)
+    {
+        for(auto &j:i->members_)
+        {
+            if(j==oprands[0])
             {
-                auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(instr->get_operand(i)));
-                operands.push_back(cons_op);
+                lop=i->value_expr_;
             }
-            else
+            if(j==oprands[1])
             {
-                for(auto &k:pin)
+                rop=i->value_expr_;
+            }
+        }
+    }
+    if((lconst!= nullptr)&&(rop!=nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+    {
+        auto cons= folder_->compute(instr,lconst, std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rconst!= nullptr))
+    {
+        auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),rconst);
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rop!= nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+    {
+        auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if(lop==nullptr&&lconst== nullptr)
+    {
+        lop=SingleExpression::create(oprands[0]);
+    }
+    if(rop== nullptr&&rconst== nullptr)
+    {
+        rop=SingleExpression::create(oprands[1]);
+    }
+    if(lconst!= nullptr)
+    {
+        lop=ConstantExpression::create(lconst);
+    }
+    if(rconst!= nullptr)
+    {
+        rop=ConstantExpression::create(rconst);
+    }
+    return FCmpExpression::create(dynamic_cast<FCmpInst*>(instr)->get_cmp_op(),lop,rop);
+}
+shared_ptr<Expression> GVN::cmpValueExpr(Instruction *instr, GVN::partitions &pin) const {
+    auto oprands=instr->get_operands();
+    auto lconst=dynamic_cast<Constant*>(oprands[0]);
+    auto rconst=dynamic_cast<Constant*>(oprands[1]);
+    if(lconst!= nullptr)
+    {
+        if(rconst!= nullptr)
+        {
+            auto cons= folder_->compute(instr,lconst,rconst);
+            auto consExp=ConstantExpression::create(cons);
+            return consExp;
+        }
+    }
+
+    std::shared_ptr<Expression> lop= nullptr;
+    std::shared_ptr<Expression> rop= nullptr;
+    for(auto &i:pin)
+    {
+        for(auto &j:i->members_)
+        {
+            if(j==oprands[0])
+            {
+                lop=i->value_expr_;
+            }
+            if(j==oprands[1])
+            {
+                rop=i->value_expr_;
+            }
+        }
+    }
+    if((lconst!= nullptr)&&(rop!=nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+    {
+        auto cons= folder_->compute(instr,lconst, std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rconst!= nullptr))
+    {
+        auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),rconst);
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if((lop!= nullptr)&&(lop->get_expr_type()==Expression::e_constant)&&(rop!= nullptr)&&(rop->get_expr_type()==Expression::e_constant))
+    {
+        auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(lop)->get_cons(),std::dynamic_pointer_cast<ConstantExpression>(rop)->get_cons());
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    if(lop==nullptr&&lconst== nullptr)
+    {
+        lop=SingleExpression::create(oprands[0]);
+    }
+    if(rop== nullptr&&rconst== nullptr)
+    {
+        rop=SingleExpression::create(oprands[1]);
+    }
+    if(lconst!= nullptr)
+    {
+        lop=ConstantExpression::create(lconst);
+    }
+    if(rconst!= nullptr)
+    {
+        rop=ConstantExpression::create(rconst);
+    }
+    return CmpExpression::create(dynamic_cast<CmpInst*>(instr)->get_cmp_op(),lop,rop);
+}
+shared_ptr<Expression> GVN::funcValueExpr(Instruction *instr, GVN::partitions &pin) const {
+    std::vector<std::shared_ptr<Expression>> operands{};
+    for(int i=1;i<instr->get_operands().size();i++)
+    {
+        if(dynamic_cast<Constant*>(instr->get_operands()[i])!= nullptr)
+        {
+            auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(instr->get_operand(i)));
+            operands.push_back(cons_op);
+        }
+        else
+        {
+            for(auto &k:pin)
+            {
+                for(auto &j:k->members_)
                 {
-                    for(auto &j:k->members_)
+                    if(j==(instr->get_operand(i)))
                     {
-                        if(j==(instr->get_operand(i)))
-                        {
-                            operands.push_back(k->value_expr_);
-                            break;
-                        }
+                        operands.push_back(k->value_expr_);
+                        break;
                     }
                 }
             }
         }
-        return FuncExpression::create(instr->get_operand(0),operands,func_info_->is_pure_function(dynamic_cast<Function *>(instr->get_operand(0))),instr);
     }
-    return SingleExpression::create(instr);
+    return FuncExpression::create(instr->get_operand(0),operands,
+                                  func_info_->is_pure_function(dynamic_cast<Function *>(instr->get_operand(0))),instr);
 }
 shared_ptr<Expression> GVN::binValueExpr(Instruction *instr, GVN::partitions &pin) {
     auto oprands=instr->get_operands();
@@ -494,10 +649,6 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
     // TODO: get different ValueExpr by Instruction::OpID, modify pout
     for(auto &i:pout)
     {
-//       if( i->members_.find(x)!=i->members_.end())
-//       {
-//           i->members_.erase(x);
-//       }
         i->members_.erase(x);
         if(i->members_.empty())
         {
@@ -554,7 +705,17 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                     }
                     break;
                 }
-            }
+                case Expression::e_cmp: {
+                    auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
+                    if((i->value_cmp!= nullptr)&&(i->value_cmp->equiv(ve_cmp.get())))
+                    {
+                        judge=true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
+                case Expression::e_fcmp: break;
+                }
         }
     }
     if (!judge) {
@@ -591,8 +752,20 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                 cc->leader_=x;
                 cc->value_func=ve_func;
                 break;
+            }
+            case Expression::e_cmp: {
+                auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
+                cc->leader_=x;
+                cc->value_cmp=ve_cmp;
+            break;
+            }
+        case Expression::e_fcmp: {
+            auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
+            cc->leader_=x;
+            cc->value_fcmp=ve_fcmp;
+            break;
+            }
         }
-    }
     pout.insert(cc);
     }
     return pout;
@@ -800,6 +973,8 @@ bool GVNExpression::operator==(const Expression &lhs, const Expression &rhs) {
     case Expression::e_phi: return equiv_as<PhiExpression>(lhs, rhs);
     case Expression::e_single: return equiv_as<SingleExpression>(lhs,rhs);
     case Expression::e_func: return equiv_as<FuncExpression>(lhs,rhs);
+    case Expression::e_cmp: return equiv_as<CmpExpression>(lhs,rhs);
+    case Expression::e_fcmp: return equiv_as<FCmpExpression>(lhs,rhs);
     }
 }
 

@@ -42,7 +42,7 @@ class ConstFolder {
 class Expression {
   public:
     // TODO: you need to extend expression types according to testcases
-    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func};
+    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func,e_cmp,e_fcmp};
     Expression(gvn_expr_t t) : expr_type(t) {}
     virtual ~Expression() = default;
     virtual std::string print() = 0;
@@ -68,6 +68,64 @@ class ConstantExpression : public Expression {
 };
 
 // arithmetic expression
+class FCmpExpression : public Expression {
+  public:
+    static std::shared_ptr<FCmpExpression> create(FCmpInst::CmpOp op,
+                                                 std::shared_ptr<Expression> lhs,
+                                                 std::shared_ptr<Expression> rhs) {
+        return std::make_shared<FCmpExpression>(op, lhs, rhs);
+    }
+    virtual std::string print() {
+        return "(fcmp " + lhs_->print() + " " + rhs_->print() + ")";
+    }
+
+    bool equiv(const FCmpExpression *other) const {
+        if (fcmp_op_ == other->fcmp_op_ and *lhs_ == *other->lhs_ and *rhs_ == *other->rhs_)
+            return true;
+        else
+            return false;
+    }
+    gvn_expr_t get_lhs_type(){return lhs_->get_expr_type();}
+    gvn_expr_t get_rhs_type(){return rhs_->get_expr_type();}
+    FCmpInst::CmpOp get_op(){return fcmp_op_;}
+    std::shared_ptr<Expression> get_lhs(){return lhs_;}
+    std::shared_ptr<Expression> get_rhs(){return rhs_;}
+    FCmpExpression(FCmpInst::CmpOp op, std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs)
+        : Expression(e_fcmp), fcmp_op_(op), lhs_(lhs), rhs_(rhs) {}
+
+  private:
+    FCmpInst::CmpOp fcmp_op_;
+    std::shared_ptr<Expression> lhs_, rhs_;
+};
+class CmpExpression : public Expression {
+  public:
+    static std::shared_ptr<CmpExpression> create(CmpInst::CmpOp op,
+                                                    std::shared_ptr<Expression> lhs,
+                                                    std::shared_ptr<Expression> rhs) {
+        return std::make_shared<CmpExpression>(op, lhs, rhs);
+    }
+    virtual std::string print() {
+        return "(cmp " + lhs_->print() + " " + rhs_->print() + ")";
+    }
+
+    bool equiv(const CmpExpression *other) const {
+        if (cmp_op_ == other->cmp_op_ and *lhs_ == *other->lhs_ and *rhs_ == *other->rhs_)
+            return true;
+        else
+            return false;
+    }
+    gvn_expr_t get_lhs_type(){return lhs_->get_expr_type();}
+    gvn_expr_t get_rhs_type(){return rhs_->get_expr_type();}
+    CmpInst::CmpOp get_op(){return cmp_op_;}
+    std::shared_ptr<Expression> get_lhs(){return lhs_;}
+    std::shared_ptr<Expression> get_rhs(){return rhs_;}
+    CmpExpression(CmpInst::CmpOp op, std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs)
+        : Expression(e_cmp), cmp_op_(op), lhs_(lhs), rhs_(rhs) {}
+
+  private:
+    CmpInst::CmpOp cmp_op_;
+    std::shared_ptr<Expression> lhs_, rhs_;
+};
 class BinaryExpression : public Expression {
   public:
     static std::shared_ptr<BinaryExpression> create(Instruction::OpID op,
@@ -196,6 +254,8 @@ struct CongruenceClass {
     std::shared_ptr<GVNExpression::BinaryExpression> value_bin;
     std::shared_ptr<GVNExpression::SingleExpression> value_single;
     std::shared_ptr<GVNExpression::FuncExpression> value_func;
+    std::shared_ptr<GVNExpression::CmpExpression> value_cmp;
+    std::shared_ptr<GVNExpression::FCmpExpression> value_fcmp;
     std::set<Value *> members_;
 
     CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},members_{} {}
@@ -254,6 +314,10 @@ class GVN : public Pass {
     std::unique_ptr<GVNExpression::ConstFolder> folder_;
     std::unique_ptr<DeadCode> dce_;
     std::shared_ptr<GVNExpression::Expression> binValueExpr(Instruction *instr, partitions &pin);
+    void globel_and_argv(partitions &p);
+    std::shared_ptr<GVNExpression::Expression> funcValueExpr(Instruction *instr, partitions &pin) const;
+    std::shared_ptr<GVNExpression::Expression> cmpValueExpr(Instruction *instr, partitions &pin) const;
+    std::shared_ptr<GVNExpression::Expression> fcmpValueExpr(Instruction *instr, partitions &pin);
 };
 
 bool operator==(const GVN::partitions &p1, const GVN::partitions &p2);
