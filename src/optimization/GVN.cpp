@@ -250,6 +250,7 @@ void GVN::detectEquivalences() {
         }
         pout_[&bb]=p_top;
     }
+    auto count=0;
     do {
         changed= false;
         // see the pseudo code in documentation
@@ -288,6 +289,21 @@ void GVN::detectEquivalences() {
                     {
                         Value* op;
                         bool judge=true;
+                        for(auto &i:p)
+                        {
+                            i->members_.erase(&instr);
+                            if(i->members_.empty())
+                            {
+                                p.erase(i);
+                            }
+//                            for(auto &j:i->members_)
+//                            {
+//                                if(j==(&instr))
+//                                {
+//                                    i->members_.erase(j);
+//                                }
+//                            }
+                        }
                         if(instr.get_operand(1)==&bb)
                         {
                             op=instr.get_operand(0);
@@ -313,7 +329,7 @@ void GVN::detectEquivalences() {
                             auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(op));
                             for(auto &i:p)
                             {
-                                if((i->value_const_!= nullptr)&&(i->value_const_==cons_op))
+                                if((i->value_const_!= nullptr)&&(i->value_const_->equiv(cons_op.get())))
                                 {
                                     i->members_.insert(&instr);
                                     judge=false;
@@ -341,11 +357,11 @@ void GVN::detectEquivalences() {
             pout_[&bb]=std::move(p);
         }
 
-//        count++;
-//        if(count>=4)
-//        {
-//            changed=false;
-//        }
+        count++;
+        if(count>=10)
+        {
+            changed=false;
+        }
     } while (changed);
 }
 
@@ -440,10 +456,15 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
     // TODO: get different ValueExpr by Instruction::OpID, modify pout
     for(auto &i:pout)
     {
-       if( i->members_.find(x)!=i->members_.end())
-       {
-           i->members_.erase(x);
-       }
+//       if( i->members_.find(x)!=i->members_.end())
+//       {
+//           i->members_.erase(x);
+//       }
+        i->members_.erase(x);
+        if(i->members_.empty())
+        {
+            pout.erase(i);
+        }
     }
     auto ve= valueExpr(x,pout);
     auto vpf= valuePhiFunc(ve,pout);
@@ -631,6 +652,10 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
 
 Value* GVN::getVN(const partitions &pout, shared_ptr<Expression> ve) {
     // TODO: return what?
+    if(ve== nullptr)
+    {
+        return nullptr;
+    }
     for (auto it = pout.begin(); it != pout.end(); it++)
         if ((*it)->value_expr_ and *(*it)->value_expr_ == *ve)
             return (*it)->leader_;
