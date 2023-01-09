@@ -137,16 +137,16 @@ class SingleExpression : public Expression {
 };
 class FuncExpression : public Expression {
   public:
-    static std::shared_ptr<FuncExpression> create(std::vector<Value*>a,bool isPure,Instruction* xx) {
-        return std::make_shared<FuncExpression>(a,isPure,xx);
+    static std::shared_ptr<FuncExpression> create(Value* f,std::vector<std::shared_ptr<Expression>>a,bool isPure,Instruction* xx) {
+        return std::make_shared<FuncExpression>(f,a,isPure,xx);
     }
     virtual std::string print() {
 //        return var->print();
         return "";
     }
 
-    FuncExpression(std::vector<Value*> a,bool isPure,Instruction *xx)
-        : Expression(e_func),operands(a),pure(isPure),x(xx){}
+    FuncExpression(Value* f,std::vector<std::shared_ptr<Expression>> a,bool isPure,Instruction *xx)
+        : Expression(e_func),pure(isPure),func(f),operands(std::move(a)),x(xx){}
 
     bool equiv(const FuncExpression *other) const {
         if(x==other->x)
@@ -155,19 +155,24 @@ class FuncExpression : public Expression {
         }
         if (!pure || !other->pure)
             return false;
-        else{
-            if(operands==other->operands)
-            {
-                return true;
-            }
-            else{
-                return false;
-            }
-        }
+       if(func!=other->func)
+           return false;
+       if(operands.size()!=other->operands.size())
+           return false;
+       for(int i=0;i<operands.size();i++)
+       {
+           if(operands[i]!=other->operands[i])
+           {
+               return false;
+           }
+       }
+       return true;
     }
   private:
-    std::vector<Value*> operands;
+//    std::vector<Value*> operands;
     bool pure;
+    Value* func;
+    std::vector<std::shared_ptr<Expression>> operands;
     Instruction* x;
 };
 } // namespace GVNExpression
