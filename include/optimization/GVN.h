@@ -28,6 +28,8 @@ class ConstFolder {
     Constant *compute(Instruction *instr, Constant *value1, Constant *value2);
     Constant *compute(Instruction *instr, Constant *value1);
 
+    Constant *compute(Instruction::OpID op, Constant *value1, Constant *value2);
+
   private:
     Module *module_;
 };
@@ -83,7 +85,11 @@ class BinaryExpression : public Expression {
         else
             return false;
     }
-
+    gvn_expr_t get_lhs_type(){return lhs_->get_expr_type();}
+    gvn_expr_t get_rhs_type(){return rhs_->get_expr_type();}
+    Instruction::OpID get_op(){return op_;}
+    std::shared_ptr<Expression> get_lhs(){return lhs_;}
+    std::shared_ptr<Expression> get_rhs(){return rhs_;}
     BinaryExpression(Instruction::OpID op, std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs)
         : Expression(e_bin), op_(op), lhs_(lhs), rhs_(rhs) {}
 
@@ -94,21 +100,23 @@ class BinaryExpression : public Expression {
 
 class PhiExpression : public Expression {
   public:
-    static std::shared_ptr<PhiExpression> create(std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs) {
+    static std::shared_ptr<PhiExpression> create(Value* lhs, Value* rhs) {
         return std::make_shared<PhiExpression>(lhs, rhs);
     }
     virtual std::string print() { return "(phi " + lhs_->print() + " " + rhs_->print() + ")"; }
     bool equiv(const PhiExpression *other) const {
-        if (*lhs_ == *other->lhs_ and *rhs_ == *other->rhs_)
+        if (lhs_ == other->lhs_ and rhs_ == other->rhs_)
             return true;
         else
             return false;
     }
-    PhiExpression(std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs)
+    PhiExpression(Value* lhs, Value* rhs)
         : Expression(e_phi), lhs_(lhs), rhs_(rhs) {}
-
+    Value* get_lhs_(){return lhs_;}
+    Value* get_rhs_(){return rhs_;}
   private:
-    std::shared_ptr<Expression> lhs_, rhs_;
+
+    Value *lhs_, *rhs_;
 };
 class SingleExpression : public Expression {
   public:
@@ -219,8 +227,7 @@ class GVN : public Pass {
     std::shared_ptr<GVNExpression::PhiExpression> valuePhiFunc(std::shared_ptr<GVNExpression::Expression>,
                                                                const partitions &);
     std::shared_ptr<GVNExpression::Expression> valueExpr(Instruction *instr,partitions pin);
-    std::shared_ptr<GVNExpression::Expression> getVN(const partitions &pout,
-                                                     std::shared_ptr<GVNExpression::Expression> ve);
+    Value* getVN(const partitions &pout,std::shared_ptr<GVNExpression::Expression> ve);
 
     // replace cc members with leader
     void replace_cc_members();
@@ -241,6 +248,7 @@ class GVN : public Pass {
     std::unique_ptr<FuncInfo> func_info_;
     std::unique_ptr<GVNExpression::ConstFolder> folder_;
     std::unique_ptr<DeadCode> dce_;
+    std::shared_ptr<GVNExpression::Expression> binValueExpr(Instruction *instr, partitions &pin);
 };
 
 bool operator==(const GVN::partitions &p1, const GVN::partitions &p2);
