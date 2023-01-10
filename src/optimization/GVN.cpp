@@ -218,6 +218,10 @@ std::shared_ptr<CongruenceClass> GVN::intersect(const std::shared_ptr<Congruence
             cc->value_trans=std::dynamic_pointer_cast<TransExpression>(Ci->value_expr_);
             break;
         }
+        case Expression::e_gep: {
+            cc->value_gep=std::dynamic_pointer_cast<GepExpression>(Ci->value_expr_);
+            break;
+        }
         }
     }
     else
@@ -419,9 +423,36 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
     }
     if(instr->is_gep())
     {
-
+        return gepValueExpr(instr, pin);
     }
     return SingleExpression::create(instr);
+}
+shared_ptr<Expression> GVN::gepValueExpr(Instruction *instr, GVN::partitions &pin) const {
+    std::vector<std::shared_ptr<Expression>> operands{};
+    for(int i=0;i<instr->get_operands().size();i++)
+    {
+        if(dynamic_cast<Constant*>(instr->get_operands()[i])!= nullptr)
+        {
+            auto cons_op=ConstantExpression::create(dynamic_cast<Constant *>(instr->get_operand(i)));
+            operands.push_back(cons_op);
+        }
+        else
+        {
+            for(auto &k:pin)
+            {
+                for(auto &j:k->members_)
+                {
+                    if(j==(instr->get_operand(i)))
+                    {
+                        operands.push_back(k->value_expr_);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    auto gepInstr=dynamic_cast<GetElementPtrInst*>(instr);
+    return GepExpression::create(gepInstr->get_element_type(),operands);
 }
 shared_ptr<Expression> GVN::transValueExpr(Instruction *instr, GVN::partitions &pin) const {
     auto consOp=dynamic_cast<Constant*>(instr->get_operand(0));
@@ -738,7 +769,15 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                     }
                     break;
                 }
-                case Expression::e_single: break;
+                case Expression::e_single: {
+                    auto ve_single=std::dynamic_pointer_cast<SingleExpression>(ve);
+                    if((i->value_single!= nullptr)&&(i->value_single->equiv(ve_single.get())))
+                    {
+                        judge=true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
                 case Expression::e_func: {
                     auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
                     if((i->value_func!= nullptr)&&(i->value_func->equiv(ve_func.get())))
@@ -775,7 +814,16 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                     }
                     break;
                 }
+                case Expression::e_gep: {
+                    auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
+                    if((i->value_gep!= nullptr)&&(i->value_gep->equiv(ve_gep.get())))
+                    {
+                        judge=true;
+                        i->members_.insert(x);
+                    }
+                    break;
                 }
+            }
         }
     }
     if (!judge) {
@@ -829,6 +877,12 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                 auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
                 cc->leader_=x;
                 cc->value_trans=ve_trans;
+                break;
+            }
+            case Expression::e_gep: {
+                auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
+                cc->leader_=x;
+                cc->value_gep=ve_gep;
                 break;
             }
         }
@@ -1042,6 +1096,7 @@ bool GVNExpression::operator==(const Expression &lhs, const Expression &rhs) {
     case Expression::e_cmp: return equiv_as<CmpExpression>(lhs,rhs);
     case Expression::e_fcmp: return equiv_as<FCmpExpression>(lhs,rhs);
     case Expression::e_trans: return equiv_as<TransExpression>(lhs,rhs);
+    case Expression::e_gep: return equiv_as<GepExpression>(lhs,rhs);
     }
 }
 

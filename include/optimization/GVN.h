@@ -42,7 +42,7 @@ class ConstFolder {
 class Expression {
   public:
     // TODO: you need to extend expression types according to testcases
-    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func,e_cmp,e_fcmp,e_trans};
+    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func,e_cmp,e_fcmp,e_trans,e_gep};
     Expression(gvn_expr_t t) : expr_type(t) {}
     virtual ~Expression() = default;
     virtual std::string print() = 0;
@@ -216,6 +216,38 @@ class SingleExpression : public Expression {
   private:
     Value* var;
 };
+class GepExpression: public Expression{
+  public:
+    static std::shared_ptr<GepExpression> create(Type* t,std::vector<std::shared_ptr<Expression>>a){
+        return std::make_shared<GepExpression>(t,a);
+    }
+    virtual std::string print(){
+        return "gep";
+    }
+    GepExpression(Type* type,std::vector<std::shared_ptr<Expression>>a)
+    : Expression(e_gep),element_ty_(type),operands(std::move(a)){}
+    bool equiv(const GepExpression *other) const{
+        if(element_ty_!=other->element_ty_)
+        {
+            return false;
+        }
+        if(operands.size()!=other->operands.size())
+        {
+            return false;
+        }
+        for(int i=0;i<operands.size();i++)
+        {
+            if(!(operands[i]==other->operands[i]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+  private:
+    Type* element_ty_;
+    std::vector<std::shared_ptr<Expression>> operands;
+};
 class FuncExpression : public Expression {
   public:
     static std::shared_ptr<FuncExpression> create(Value* f,std::vector<std::shared_ptr<Expression>>a,bool isPure,Instruction* xx) {
@@ -223,7 +255,7 @@ class FuncExpression : public Expression {
     }
     virtual std::string print() {
 //        return var->print();
-        return "";
+        return "func";
     }
 
     FuncExpression(Value* f,std::vector<std::shared_ptr<Expression>> a,bool isPure,Instruction *xx)
@@ -242,7 +274,7 @@ class FuncExpression : public Expression {
            return false;
        for(int i=0;i<operands.size();i++)
        {
-           if(operands[i]!=other->operands[i])
+           if(!(operands[i]==other->operands[i]))
            {
                return false;
            }
@@ -280,9 +312,10 @@ struct CongruenceClass {
     std::shared_ptr<GVNExpression::CmpExpression> value_cmp;
     std::shared_ptr<GVNExpression::FCmpExpression> value_fcmp;
     std::shared_ptr<GVNExpression::TransExpression> value_trans;
+    std::shared_ptr<GVNExpression::GepExpression> value_gep;
     std::set<Value *> members_;
 
-    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},value_cmp{},value_fcmp{},value_trans{},members_{} {}
+    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},value_cmp{},value_fcmp{},value_trans{},value_gep{},members_{} {}
 
     bool operator<(const CongruenceClass &other) const { return this->index_ < other.index_; }
     bool operator==(const CongruenceClass &other) const;
@@ -343,6 +376,7 @@ class GVN : public Pass {
     std::shared_ptr<GVNExpression::Expression> cmpValueExpr(Instruction *instr, partitions &pin) const;
     std::shared_ptr<GVNExpression::Expression> fcmpValueExpr(Instruction *instr, partitions &pin);
     std::shared_ptr<GVNExpression::Expression> transValueExpr(Instruction *instr, partitions &pin) const;
+    std::shared_ptr<GVNExpression::Expression> gepValueExpr(Instruction *instr, partitions &pin) const;
 };
 
 bool operator==(const GVN::partitions &p1, const GVN::partitions &p2);
