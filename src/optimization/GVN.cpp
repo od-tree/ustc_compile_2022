@@ -147,14 +147,14 @@ GVN::partitions GVN::join(const partitions &P1, const partitions &P2) {
     {
         return {};
     }
-    for(auto i:P1)
+    for(const auto& i:P1)
     {
         if(i->index_==0)
         {
             return P2;
         }
     }
-    for(auto i:P2)
+    for(const auto& i:P2)
     {
         if(i->index_==0)
         {
@@ -176,8 +176,8 @@ GVN::partitions GVN::join(const partitions &P1, const partitions &P2) {
     return p;
 }
 
-std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass> Ci,
-                                                std::shared_ptr<CongruenceClass> Cj) {
+std::shared_ptr<CongruenceClass> GVN::intersect(const std::shared_ptr<CongruenceClass>& Ci,
+                                                const std::shared_ptr<CongruenceClass>& Cj) {
     // TODO
     shared_ptr<CongruenceClass> cc;
     if(Ci->value_expr_==Cj->value_expr_)
@@ -212,6 +212,10 @@ std::shared_ptr<CongruenceClass> GVN::intersect(std::shared_ptr<CongruenceClass>
         }
         case Expression::e_fcmp: {
             cc->value_fcmp=std::dynamic_pointer_cast<FCmpExpression>(Ci->value_expr_);
+            break;
+        }
+        case Expression::e_trans: {
+            cc->value_trans=std::dynamic_pointer_cast<TransExpression>(Ci->value_expr_);
             break;
         }
         }
@@ -409,7 +413,46 @@ shared_ptr<Expression> GVN::valueExpr(Instruction *instr,partitions pin) {
     {
         return fcmpValueExpr(instr, pin);
     }
+    if(instr->is_si2fp()||instr->is_fp2si()||instr->is_zext())
+    {
+        return transValueExpr(instr, pin);
+    }
+    if(instr->is_gep())
+    {
+
+    }
     return SingleExpression::create(instr);
+}
+shared_ptr<Expression> GVN::transValueExpr(Instruction *instr, GVN::partitions &pin) const {
+    auto consOp=dynamic_cast<Constant*>(instr->get_operand(0));
+    if(consOp!= nullptr)
+    {
+        auto cons= folder_->compute(instr,consOp);
+        auto consExp=ConstantExpression::create(cons);
+        return consExp;
+    }
+    std::shared_ptr<Expression> operand= nullptr;
+    for(auto &i:pin)
+        {
+            for(auto &j:i->members_)
+            {
+                if(j==instr->get_operand(0))
+                {
+                    operand=i->value_expr_;
+                }
+            }
+    }
+    if((operand!= nullptr)&&(operand->get_expr_type()==Expression::e_constant))
+        {
+            auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(operand)->get_cons());
+            auto consExpr=ConstantExpression::create(cons);
+            return consExpr;
+    }
+    if((consOp== nullptr)&&(operand== nullptr))
+        {
+            operand=SingleExpression::create(instr);
+    }
+    return TransExpression::create(instr->get_instr_type(),operand);
 }
 shared_ptr<Expression> GVN::fcmpValueExpr(Instruction *instr, GVN::partitions &pin) {
     auto oprands=instr->get_operands();
@@ -642,7 +685,7 @@ shared_ptr<Expression> GVN::binValueExpr(Instruction *instr, GVN::partitions &pi
 /// \param bb basic block in which the transfer function is called
 GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) {
     partitions pout = clone(pin);
-    if(x->is_void()||x->is_phi()||x->is_ret()||x->is_br())
+    if(x->is_void()||x->is_phi())
     {
         return pout;
     }
@@ -655,8 +698,8 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
             pout.erase(i);
         }
     }
-    auto ve= valueExpr(x,pout);
-    auto vpf= valuePhiFunc(ve,pout);
+    auto ve= valueExpr(x,pin);
+    auto vpf= valuePhiFunc(ve,pin);
     bool judge= false;
 
     if(vpf!= nullptr)
@@ -714,7 +757,24 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                     }
                     break;
                 }
-                case Expression::e_fcmp: break;
+                case Expression::e_fcmp: {
+                    auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
+                    if((i->value_fcmp!= nullptr)&&(i->value_fcmp->equiv(ve_fcmp.get())))
+                    {
+                        judge=true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
+                case Expression::e_trans: {
+                    auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
+                    if((i->value_trans!=nullptr)&&(i->value_trans->equiv(ve_trans.get())))
+                    {
+                        judge=true;
+                        i->members_.insert(x);
+                    }
+                    break;
+                }
                 }
         }
     }
@@ -759,14 +819,20 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
                 cc->value_cmp=ve_cmp;
             break;
             }
-        case Expression::e_fcmp: {
-            auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
-            cc->leader_=x;
-            cc->value_fcmp=ve_fcmp;
-            break;
+            case Expression::e_fcmp: {
+                auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
+                cc->leader_=x;
+                cc->value_fcmp=ve_fcmp;
+                break;
+            }
+            case Expression::e_trans: {
+                auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
+                cc->leader_=x;
+                cc->value_trans=ve_trans;
+                break;
             }
         }
-    pout.insert(cc);
+        pout.insert(cc);
     }
     return pout;
 }

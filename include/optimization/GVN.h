@@ -42,7 +42,7 @@ class ConstFolder {
 class Expression {
   public:
     // TODO: you need to extend expression types according to testcases
-    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func,e_cmp,e_fcmp};
+    enum gvn_expr_t { e_constant, e_bin, e_phi ,e_single,e_func,e_cmp,e_fcmp,e_trans};
     Expression(gvn_expr_t t) : expr_type(t) {}
     virtual ~Expression() = default;
     virtual std::string print() = 0;
@@ -68,6 +68,29 @@ class ConstantExpression : public Expression {
 };
 
 // arithmetic expression
+class TransExpression :public Expression{
+  public:
+    static std::shared_ptr<TransExpression> create(Instruction::OpID op,std::shared_ptr<Expression> hs){
+        return std::make_shared<TransExpression>(op,hs);
+    }
+    virtual std::string print(){
+        return "("+Instruction::get_instr_op_name(op_)+" "+hs_->print()+")";
+    }
+    bool equiv(const TransExpression *other)const{
+        if(op_==other->op_ and *hs_==*other->hs_)
+            return true;
+        else
+            return false;
+    }
+    TransExpression(Instruction::OpID op,std::shared_ptr<Expression> hs)
+        : Expression(e_trans),op_(op),hs_(hs){}
+    gvn_expr_t get_hs_type(){return hs_->get_expr_type();}
+    Instruction::OpID get_op(){return op_;}
+    std::shared_ptr<Expression> get_hs(){return hs_;}
+  private:
+    Instruction::OpID op_;
+    std::shared_ptr<Expression> hs_;
+};
 class FCmpExpression : public Expression {
   public:
     static std::shared_ptr<FCmpExpression> create(FCmpInst::CmpOp op,
@@ -256,9 +279,10 @@ struct CongruenceClass {
     std::shared_ptr<GVNExpression::FuncExpression> value_func;
     std::shared_ptr<GVNExpression::CmpExpression> value_cmp;
     std::shared_ptr<GVNExpression::FCmpExpression> value_fcmp;
+    std::shared_ptr<GVNExpression::TransExpression> value_trans;
     std::set<Value *> members_;
 
-    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},members_{} {}
+    CongruenceClass(size_t index) : index_(index), leader_{}, value_expr_{}, value_phi_{},value_const_{}, value_bin{},value_single{},value_func{},value_cmp{},value_fcmp{},value_trans{},members_{} {}
 
     bool operator<(const CongruenceClass &other) const { return this->index_ < other.index_; }
     bool operator==(const CongruenceClass &other) const;
@@ -287,7 +311,7 @@ class GVN : public Pass {
     // fill the following functions according to Pseudocode, **you might need to add more arguments**
     void detectEquivalences();
     partitions join(const partitions &P1, const partitions &P2);
-    std::shared_ptr<CongruenceClass> intersect(std::shared_ptr<CongruenceClass>, std::shared_ptr<CongruenceClass>);
+    std::shared_ptr<CongruenceClass> intersect(const std::shared_ptr<CongruenceClass>&, const std::shared_ptr<CongruenceClass>&);
     partitions transferFunction(Instruction *x,Value *e, partitions pin);
     std::shared_ptr<GVNExpression::PhiExpression> valuePhiFunc(std::shared_ptr<GVNExpression::Expression>,
                                                                const partitions &);
@@ -318,6 +342,7 @@ class GVN : public Pass {
     std::shared_ptr<GVNExpression::Expression> funcValueExpr(Instruction *instr, partitions &pin) const;
     std::shared_ptr<GVNExpression::Expression> cmpValueExpr(Instruction *instr, partitions &pin) const;
     std::shared_ptr<GVNExpression::Expression> fcmpValueExpr(Instruction *instr, partitions &pin);
+    std::shared_ptr<GVNExpression::Expression> transValueExpr(Instruction *instr, partitions &pin) const;
 };
 
 bool operator==(const GVN::partitions &p1, const GVN::partitions &p2);
