@@ -1041,6 +1041,7 @@ bool GVNExpression::operator==(const Expression &lhs, const Expression &rhs) {
     case Expression::e_func: return equiv_as<FuncExpression>(lhs,rhs);
     case Expression::e_cmp: return equiv_as<CmpExpression>(lhs,rhs);
     case Expression::e_fcmp: return equiv_as<FCmpExpression>(lhs,rhs);
+    case Expression::e_trans: return equiv_as<TransExpression>(lhs,rhs);
     }
 }
 
