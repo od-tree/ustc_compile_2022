@@ -1037,7 +1037,7 @@ void GVN::run() {
     gvn_json.open("gvn.json", std::ios::out);
         gvn_json << "[";
     }
-
+    m_->set_print_name();
     folder_ = std::make_unique<ConstFolder>(m_);
     func_info_ = std::make_unique<FuncInfo>(m_);
     func_info_->run();
