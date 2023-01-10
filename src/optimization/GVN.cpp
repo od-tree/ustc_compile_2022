@@ -311,9 +311,17 @@ void GVN::detectEquivalences() {
                         for(auto &i:p)
                         {
                             i->members_.erase(&instr);
-                            if(i->members_.empty())
+
+                        }
+                        for(auto it=p.begin();it!=p.end();)
+                        {
+                            if((*it)->members_.empty())
                             {
-                                p.erase(i);
+                                it=p.erase(it);
+                            }
+                            else
+                            {
+                                it++;
                             }
                         }
                         if(instr.get_operand(1)==&bb)
@@ -724,9 +732,20 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
     for(auto &i:pout)
     {
         i->members_.erase(x);
-        if(i->members_.empty())
+//        if(i->members_.empty())
+//        {
+//            pout.erase(i);
+//        }
+    }
+    for(auto it=pout.begin();it!=pout.end();)
+    {
+        if((*it)->members_.empty())
         {
-            pout.erase(i);
+            it=pout.erase(it);
+        }
+        else
+        {
+            it++;
         }
     }
     auto ve= valueExpr(x,pin);
