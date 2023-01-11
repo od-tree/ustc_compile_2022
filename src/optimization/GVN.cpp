@@ -915,10 +915,39 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
     auto ve_bin=std::dynamic_pointer_cast<BinaryExpression>(ve);
     if((ve_bin!= nullptr)&&(ve_bin->get_lhs_type()==Expression::e_phi)&&(ve_bin->get_rhs_type()==Expression::e_phi)){
         auto lop1=std::dynamic_pointer_cast<PhiExpression>(ve_bin->get_lhs())->get_lhs_();
+
         shared_ptr<Expression> lve1;
         if(dynamic_cast<Constant*>(lop1)== nullptr)
         {
-            lve1= valueExpr(dynamic_cast<Instruction*>(lop1),P);
+            auto linstr1=dynamic_cast<Instruction*>(lop1);
+            if(!(linstr1->is_phi())){
+                lve1 = valueExpr(dynamic_cast<Instruction *>(lop1), P);
+            }
+            else
+            {
+                Value* lleader,*rleader;
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr1->get_operand(1))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==linstr1->get_operand(0))
+                        {
+                            lleader=i->leader_;
+                        }
+                    }
+                }
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr1->get_operand(3))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==linstr1->get_operand(2))
+                        {
+                            rleader=i->leader_;
+                        }
+                    }
+                }
+                lve1=PhiExpression::create(lleader,rleader);
+            }
         }
         else
         {
@@ -928,7 +957,36 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> lve2;
         if(dynamic_cast<Constant*>(lop2)== nullptr)
         {
-            lve2= valueExpr(dynamic_cast<Instruction*>(lop2),P);
+            auto linstr2=dynamic_cast<Instruction*>(lop2);
+            if(!(linstr2->is_phi()))
+            {
+                lve2 = valueExpr(dynamic_cast<Instruction *>(lop2), P);
+            }
+            else
+            {
+                Value* lleader,*rleader;
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr2->get_operand(1))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==linstr2->get_operand(0))
+                        {
+                            lleader=i->leader_;
+                        }
+                    }
+                }
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr2->get_operand(3))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==linstr2->get_operand(2))
+                        {
+                            rleader=i->leader_;
+                        }
+                    }
+                }
+                lve2=PhiExpression::create(lleader,rleader);
+            }
         }
         else
         {
@@ -954,7 +1012,36 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> rve1;
         if(dynamic_cast<Constant*>(rop1)== nullptr)
         {
-            rve1= valueExpr(dynamic_cast<Instruction*>(rop1),P);
+            auto rinstr1=dynamic_cast<Instruction*>(rop1);
+            if(!(rinstr1->is_phi()))
+            {
+                rve1 = valueExpr(dynamic_cast<Instruction *>(rop1), P);
+            }
+            else
+            {
+                Value* lleader,*rleader;
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr1->get_operand(1))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==rinstr1->get_operand(0))
+                        {
+                            lleader=i->leader_;
+                        }
+                    }
+                }
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr1->get_operand(3))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==rinstr1->get_operand(2))
+                        {
+                            rleader=i->leader_;
+                        }
+                    }
+                }
+                rve1=PhiExpression::create(lleader,rleader);
+            }
         }
         else
         {
@@ -964,7 +1051,36 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> rve2;
         if(dynamic_cast<Constant*>(rop2)== nullptr)
         {
-            rve2= valueExpr(dynamic_cast<Instruction*>(rop2),P);
+            auto rinstr2= dynamic_cast<Instruction*>(rop2);
+            if(!(rinstr2->is_phi()))
+            {
+                rve2 = valueExpr(dynamic_cast<Instruction *>(rop2), P);
+            }
+            else
+            {
+                Value* lleader,*rleader;
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr2->get_operand(1))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==rinstr2->get_operand(0))
+                        {
+                            lleader=i->leader_;
+                        }
+                    }
+                }
+                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr2->get_operand(3))])
+                {
+                    for(auto &j:i->members_)
+                    {
+                        if(j==rinstr2->get_operand(2))
+                        {
+                            rleader=i->leader_;
+                        }
+                    }
+                }
+                rve2=PhiExpression::create(lleader,rleader);
+            }
         }
         else
         {
