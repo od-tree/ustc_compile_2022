@@ -373,7 +373,7 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
-//            utils::print_partitions(p);
+            utils::print_partitions(p);
             if(p!=pout_[&bb])
             {
                 changed=true;
