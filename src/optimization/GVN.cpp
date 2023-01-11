@@ -266,7 +266,7 @@ void GVN::detectEquivalences() {
         }
         pout_[&bb]=p_top;
     }
-//    auto count=0;
+    //    auto count=0;
     do {
         changed= false;
         // see the pseudo code in documentation
@@ -373,7 +373,7 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
-//            utils::print_partitions(p);
+            //            utils::print_partitions(p);
             if(p!=pout_[&bb])
             {
                 changed=true;
@@ -472,24 +472,24 @@ shared_ptr<Expression> GVN::transValueExpr(Instruction *instr, GVN::partitions &
     }
     std::shared_ptr<Expression> operand= nullptr;
     for(auto &i:pin)
+    {
+        for(auto &j:i->members_)
         {
-            for(auto &j:i->members_)
+            if(j==instr->get_operand(0))
             {
-                if(j==instr->get_operand(0))
-                {
-                    operand=i->value_expr_;
-                }
+                operand=i->value_expr_;
             }
+        }
     }
     if((operand!= nullptr)&&(operand->get_expr_type()==Expression::e_constant))
-        {
-            auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(operand)->get_cons());
-            auto consExpr=ConstantExpression::create(cons);
-            return consExpr;
+    {
+        auto cons= folder_->compute(instr,std::dynamic_pointer_cast<ConstantExpression>(operand)->get_cons());
+        auto consExpr=ConstantExpression::create(cons);
+        return consExpr;
     }
     if((consOp== nullptr)&&(operand== nullptr))
-        {
-            operand=SingleExpression::create(instr);
+    {
+        operand=SingleExpression::create(instr);
     }
     return TransExpression::create(instr->get_instr_type(),operand);
 }
@@ -732,10 +732,10 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
     for(auto &i:pout)
     {
         i->members_.erase(x);
-//        if(i->members_.empty())
-//        {
-//            pout.erase(i);
-//        }
+        //        if(i->members_.empty())
+        //        {
+        //            pout.erase(i);
+        //        }
     }
     for(auto it=pout.begin();it!=pout.end();)
     {
@@ -759,89 +759,89 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
     if(ve!= nullptr) {
         for (auto &i : pout) {
             switch (ve->get_expr_type()) {
-                case Expression::e_constant:
+            case Expression::e_constant:
+            {
+                auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
+                if((i->value_const_!= nullptr)&&(i->value_const_->equiv(ve_cons.get())))
                 {
-                    auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
-                    if((i->value_const_!= nullptr)&&(i->value_const_->equiv(ve_cons.get())))
-                    {
-                        judge =true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                    judge =true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_bin:
+                break;
+            }
+            case Expression::e_bin:
+            {
+                auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
+                if ((i->value_bin!= nullptr)&&(i->value_bin->equiv(ve_bin.get())))
                 {
-                    auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
-                    if ((i->value_bin!= nullptr)&&(i->value_bin->equiv(ve_bin.get())))
-                    {
-                        judge = true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                    judge = true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_phi: {
-                    auto ve_phi=std::dynamic_pointer_cast<PhiExpression>(ve);
-                    if((i->value_phi_!= nullptr)&&(i->value_phi_->equiv(ve_phi.get())))
-                    {
-                        judge =true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_phi: {
+                auto ve_phi=std::dynamic_pointer_cast<PhiExpression>(ve);
+                if((i->value_phi_!= nullptr)&&(i->value_phi_->equiv(ve_phi.get())))
+                {
+                    judge =true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_single: {
-                    auto ve_single=std::dynamic_pointer_cast<SingleExpression>(ve);
-                    if((i->value_single!= nullptr)&&(i->value_single->equiv(ve_single.get())))
-                    {
-                        judge=true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_single: {
+                auto ve_single=std::dynamic_pointer_cast<SingleExpression>(ve);
+                if((i->value_single!= nullptr)&&(i->value_single->equiv(ve_single.get())))
+                {
+                    judge=true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_func: {
-                    auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
-                    if((i->value_func!= nullptr)&&(i->value_func->equiv(ve_func.get())))
-                    {
-                        judge =true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_func: {
+                auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
+                if((i->value_func!= nullptr)&&(i->value_func->equiv(ve_func.get())))
+                {
+                    judge =true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_cmp: {
-                    auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
-                    if((i->value_cmp!= nullptr)&&(i->value_cmp->equiv(ve_cmp.get())))
-                    {
-                        judge=true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_cmp: {
+                auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
+                if((i->value_cmp!= nullptr)&&(i->value_cmp->equiv(ve_cmp.get())))
+                {
+                    judge=true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_fcmp: {
-                    auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
-                    if((i->value_fcmp!= nullptr)&&(i->value_fcmp->equiv(ve_fcmp.get())))
-                    {
-                        judge=true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_fcmp: {
+                auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
+                if((i->value_fcmp!= nullptr)&&(i->value_fcmp->equiv(ve_fcmp.get())))
+                {
+                    judge=true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_trans: {
-                    auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
-                    if((i->value_trans!=nullptr)&&(i->value_trans->equiv(ve_trans.get())))
-                    {
-                        judge=true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_trans: {
+                auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
+                if((i->value_trans!=nullptr)&&(i->value_trans->equiv(ve_trans.get())))
+                {
+                    judge=true;
+                    i->members_.insert(x);
                 }
-                case Expression::e_gep: {
-                    auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
-                    if((i->value_gep!= nullptr)&&(i->value_gep->equiv(ve_gep.get())))
-                    {
-                        judge=true;
-                        i->members_.insert(x);
-                    }
-                    break;
+                break;
+            }
+            case Expression::e_gep: {
+                auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
+                if((i->value_gep!= nullptr)&&(i->value_gep->equiv(ve_gep.get())))
+                {
+                    judge=true;
+                    i->members_.insert(x);
                 }
+                break;
+            }
             }
         }
     }
@@ -850,60 +850,60 @@ GVN::partitions GVN::transferFunction(Instruction *x,Value  *e, partitions pin) 
         cc->members_ = {x};
         cc->value_expr_ = ve;
         switch (ve->get_expr_type()) {
-            case Expression::e_constant:
-            {
-               auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
-               cc->leader_ = ve_cons->get_cons();
-               cc->value_const_=ve_cons;
-               break;
-            }
-            case Expression::e_bin: {
-               auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
-               cc->leader_=x;
-               cc->value_bin = ve_bin;
-               break;
-            }
-            case Expression::e_phi: {
-               cc->leader_=x;
-               cc->value_phi_=std::dynamic_pointer_cast<PhiExpression>(ve);
-               break;
-            }
-            case Expression::e_single: {
-                auto ve_single=std::dynamic_pointer_cast<SingleExpression>(ve);
-                cc->leader_=x;
-                cc->value_single=ve_single;
-                break;
-            }
-            case Expression::e_func:{
-                auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
-                cc->leader_=x;
-                cc->value_func=ve_func;
-                break;
-            }
-            case Expression::e_cmp: {
-                auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
-                cc->leader_=x;
-                cc->value_cmp=ve_cmp;
+        case Expression::e_constant:
+        {
+            auto ve_cons=std::dynamic_pointer_cast<ConstantExpression>(ve);
+            cc->leader_ = ve_cons->get_cons();
+            cc->value_const_=ve_cons;
             break;
-            }
-            case Expression::e_fcmp: {
-                auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
-                cc->leader_=x;
-                cc->value_fcmp=ve_fcmp;
-                break;
-            }
-            case Expression::e_trans: {
-                auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
-                cc->leader_=x;
-                cc->value_trans=ve_trans;
-                break;
-            }
-            case Expression::e_gep: {
-                auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
-                cc->leader_=x;
-                cc->value_gep=ve_gep;
-                break;
-            }
+        }
+        case Expression::e_bin: {
+            auto ve_bin = std::dynamic_pointer_cast<BinaryExpression>(ve);
+            cc->leader_=x;
+            cc->value_bin = ve_bin;
+            break;
+        }
+        case Expression::e_phi: {
+            cc->leader_=x;
+            cc->value_phi_=std::dynamic_pointer_cast<PhiExpression>(ve);
+            break;
+        }
+        case Expression::e_single: {
+            auto ve_single=std::dynamic_pointer_cast<SingleExpression>(ve);
+            cc->leader_=x;
+            cc->value_single=ve_single;
+            break;
+        }
+        case Expression::e_func:{
+            auto ve_func=std::dynamic_pointer_cast<FuncExpression>(ve);
+            cc->leader_=x;
+            cc->value_func=ve_func;
+            break;
+        }
+        case Expression::e_cmp: {
+            auto ve_cmp=std::dynamic_pointer_cast<CmpExpression>(ve);
+            cc->leader_=x;
+            cc->value_cmp=ve_cmp;
+            break;
+        }
+        case Expression::e_fcmp: {
+            auto ve_fcmp=std::dynamic_pointer_cast<FCmpExpression>(ve);
+            cc->leader_=x;
+            cc->value_fcmp=ve_fcmp;
+            break;
+        }
+        case Expression::e_trans: {
+            auto ve_trans=std::dynamic_pointer_cast<TransExpression>(ve);
+            cc->leader_=x;
+            cc->value_trans=ve_trans;
+            break;
+        }
+        case Expression::e_gep: {
+            auto ve_gep=std::dynamic_pointer_cast<GepExpression>(ve);
+            cc->leader_=x;
+            cc->value_gep=ve_gep;
+            break;
+        }
         }
         pout.insert(cc);
     }
@@ -915,39 +915,10 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
     auto ve_bin=std::dynamic_pointer_cast<BinaryExpression>(ve);
     if((ve_bin!= nullptr)&&(ve_bin->get_lhs_type()==Expression::e_phi)&&(ve_bin->get_rhs_type()==Expression::e_phi)){
         auto lop1=std::dynamic_pointer_cast<PhiExpression>(ve_bin->get_lhs())->get_lhs_();
-
         shared_ptr<Expression> lve1;
         if(dynamic_cast<Constant*>(lop1)== nullptr)
         {
-            auto linstr1=dynamic_cast<Instruction*>(lop1);
-            if(!(linstr1->is_phi())){
-                lve1 = valueExpr(dynamic_cast<Instruction *>(lop1), P);
-            }
-            else
-            {
-                Value* lleader,*rleader;
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr1->get_operand(1))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==linstr1->get_operand(0))
-                        {
-                            lleader=i->leader_;
-                        }
-                    }
-                }
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr1->get_operand(3))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==linstr1->get_operand(2))
-                        {
-                            rleader=i->leader_;
-                        }
-                    }
-                }
-                lve1=PhiExpression::create(lleader,rleader);
-            }
+            lve1= valueExpr(dynamic_cast<Instruction*>(lop1),P);
         }
         else
         {
@@ -957,36 +928,7 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> lve2;
         if(dynamic_cast<Constant*>(lop2)== nullptr)
         {
-            auto linstr2=dynamic_cast<Instruction*>(lop2);
-            if(!(linstr2->is_phi()))
-            {
-                lve2 = valueExpr(dynamic_cast<Instruction *>(lop2), P);
-            }
-            else
-            {
-                Value* lleader,*rleader;
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr2->get_operand(1))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==linstr2->get_operand(0))
-                        {
-                            lleader=i->leader_;
-                        }
-                    }
-                }
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(linstr2->get_operand(3))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==linstr2->get_operand(2))
-                        {
-                            rleader=i->leader_;
-                        }
-                    }
-                }
-                lve2=PhiExpression::create(lleader,rleader);
-            }
+            lve2= valueExpr(dynamic_cast<Instruction*>(lop2),P);
         }
         else
         {
@@ -1012,36 +954,7 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> rve1;
         if(dynamic_cast<Constant*>(rop1)== nullptr)
         {
-            auto rinstr1=dynamic_cast<Instruction*>(rop1);
-            if(!(rinstr1->is_phi()))
-            {
-                rve1 = valueExpr(dynamic_cast<Instruction *>(rop1), P);
-            }
-            else
-            {
-                Value* lleader,*rleader;
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr1->get_operand(1))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==rinstr1->get_operand(0))
-                        {
-                            lleader=i->leader_;
-                        }
-                    }
-                }
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr1->get_operand(3))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==rinstr1->get_operand(2))
-                        {
-                            rleader=i->leader_;
-                        }
-                    }
-                }
-                rve1=PhiExpression::create(lleader,rleader);
-            }
+            rve1= valueExpr(dynamic_cast<Instruction*>(rop1),P);
         }
         else
         {
@@ -1051,42 +964,13 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         shared_ptr<Expression> rve2;
         if(dynamic_cast<Constant*>(rop2)== nullptr)
         {
-            auto rinstr2= dynamic_cast<Instruction*>(rop2);
-            if(!(rinstr2->is_phi()))
-            {
-                rve2 = valueExpr(dynamic_cast<Instruction *>(rop2), P);
-            }
-            else
-            {
-                Value* lleader,*rleader;
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr2->get_operand(1))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==rinstr2->get_operand(0))
-                        {
-                            lleader=i->leader_;
-                        }
-                    }
-                }
-                for(auto &i:pout_[dynamic_cast<BasicBlock*>(rinstr2->get_operand(3))])
-                {
-                    for(auto &j:i->members_)
-                    {
-                        if(j==rinstr2->get_operand(2))
-                        {
-                            rleader=i->leader_;
-                        }
-                    }
-                }
-                rve2=PhiExpression::create(lleader,rleader);
-            }
+            rve2= valueExpr(dynamic_cast<Instruction*>(rop2),P);
         }
         else
         {
             rve2=ConstantExpression::create(dynamic_cast<Constant*>(rop2));
         }
-       shared_ptr<Expression> rexpr;
+        shared_ptr<Expression> rexpr;
         if((rve1->get_expr_type()!=Expression::e_constant)||(rve2->get_expr_type()!=Expression::e_constant)) {
             rexpr = BinaryExpression::create(ve_bin->get_op(), rve1, rve2);
         }
@@ -1168,8 +1052,8 @@ void GVN::replace_cc_members() {
 void GVN::run() {
     std::ofstream gvn_json;
     if (dump_json_) {
-//        gvn_json.open("/home/ly/2022fall-compiler_cminus/cmake-build-debug/gvn.json", std::ios::out);
-    gvn_json.open("gvn.json", std::ios::out);
+        //        gvn_json.open("/home/ly/2022fall-compiler_cminus/cmake-build-debug/gvn.json", std::ios::out);
+        gvn_json.open("gvn.json", std::ios::out);
         gvn_json << "[";
     }
     m_->set_print_name();
@@ -1276,5 +1160,5 @@ bool CongruenceClass::operator==(const CongruenceClass &other) const {
     // TODO: which fields need to be compared?
     return std::tie(this->members_)==std::tie(other.members_);
 
-//    return false;
+    //    return false;
 }
