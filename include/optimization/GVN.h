@@ -181,8 +181,8 @@ class BinaryExpression : public Expression {
 
 class PhiExpression : public Expression {
   public:
-    static std::shared_ptr<PhiExpression> create(Value* lhs, Value* rhs) {
-        return std::make_shared<PhiExpression>(lhs, rhs);
+    static std::shared_ptr<PhiExpression> create(Value* xx,std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs) {
+        return std::make_shared<PhiExpression>(xx,lhs, rhs);
     }
     virtual std::string print() { return "(phi " + lhs_->print() + " " + rhs_->print() + ")"; }
     bool equiv(const PhiExpression *other) const {
@@ -191,13 +191,14 @@ class PhiExpression : public Expression {
         else
             return false;
     }
-    PhiExpression(Value* lhs, Value* rhs)
-        : Expression(e_phi), lhs_(lhs), rhs_(rhs) {}
-    Value* get_lhs_(){return lhs_;}
-    Value* get_rhs_(){return rhs_;}
+    PhiExpression(Value* xx,std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs)
+        : Expression(e_phi), x(xx),lhs_(lhs), rhs_(rhs) {}
+    std::shared_ptr<Expression> get_lhs_(){return lhs_;}
+    std::shared_ptr<Expression> get_rhs_(){return rhs_;}
+    Value* get_instr(){return x;}
   private:
-
-    Value *lhs_, *rhs_;
+    Value* x;
+    std::shared_ptr<Expression> lhs_, rhs_;
 };
 class SingleExpression : public Expression {
   public:
@@ -212,7 +213,7 @@ class SingleExpression : public Expression {
     }
     SingleExpression(Value *a)
         : Expression(e_single),var(a){}
-
+    Value* get() const{return var;}
   private:
     Value* var;
 };
@@ -349,7 +350,7 @@ class GVN : public Pass {
     std::shared_ptr<GVNExpression::PhiExpression> valuePhiFunc(std::shared_ptr<GVNExpression::Expression>,
                                                                const partitions &);
     std::shared_ptr<GVNExpression::Expression> valueExpr(Instruction *instr,partitions pin);
-    Value* getVN(const partitions &pout,std::shared_ptr<GVNExpression::Expression> ve);
+    std::shared_ptr<GVNExpression::Expression> getVN(const partitions &pout,std::shared_ptr<GVNExpression::Expression> ve);
 
     // replace cc members with leader
     void replace_cc_members();
