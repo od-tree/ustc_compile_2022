@@ -186,7 +186,7 @@ class PhiExpression : public Expression {
     }
     virtual std::string print() { return "(phi " + lhs_->print() + " " + rhs_->print() + ")"; }
     bool equiv(const PhiExpression *other) const {
-        if (lhs_ == other->lhs_ and rhs_ == other->rhs_)
+        if (*lhs_ == *other->lhs_ and *rhs_ == *other->rhs_)
             return true;
         else
             return false;

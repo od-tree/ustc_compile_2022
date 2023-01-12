@@ -375,7 +375,7 @@ void GVN::detectEquivalences() {
                     }
                 }
             }
-            //            utils::print_partitions(p);
+            utils::print_partitions(p);
             if(p!=pout_[&bb])
             {
                 changed=true;
@@ -952,7 +952,7 @@ shared_ptr<PhiExpression> GVN::valuePhiFunc(shared_ptr<Expression> ve, const par
         auto vj= getVN(pout_[dynamic_cast<BasicBlock*>(linstr->get_operand(3))],rexpr);
         if(vj== nullptr)
         {
-            vj= valuePhiFunc(lexpr,pout_[dynamic_cast<BasicBlock*>(linstr->get_operand(3))]);
+            vj= valuePhiFunc(rexpr,pout_[dynamic_cast<BasicBlock*>(linstr->get_operand(3))]);
         }
         if(vi!= nullptr and vj!= nullptr)
         {
